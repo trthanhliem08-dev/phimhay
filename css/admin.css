@@ -1,0 +1,223 @@
+/* ============================================================================
+   FILE: css/admin.css
+   MỤC ĐÍCH: Giao diện Bảng điều khiển Quản trị viên (admin.html)
+   ============================================================================ */
+
+.admin-container {
+  margin-top: 28px;
+  margin-bottom: 60px;
+}
+
+.admin-banner {
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.2), rgba(245, 158, 11, 0.15));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-banner h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-banner p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.stat-card .stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-top: 6px;
+  color: #fff;
+}
+
+.stat-card.danger .stat-value {
+  color: #f87171;
+}
+
+.admin-panels-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.admin-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 22px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.panel-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.admin-search-input {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 220px;
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.admin-item {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-item-left {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.admin-item-info h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-item-info .sub-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.admin-item-info .cmt-content {
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 10px;
+  border-radius: 6px;
+  word-break: break-word;
+}
+
+.movie-link-tag {
+  display: inline-block;
+  color: var(--accent-gold);
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.admin-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-admin-sm {
+  border: none;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-admin-sm.del {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+}
+
+.btn-admin-sm.del:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn-admin-sm.ban {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+
+.btn-admin-sm.unban {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.status-banned-tag {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+@media (max-width: 992px) {
+  .admin-panels-grid {
+    grid-template-columns: 1fr;
+  }
+}

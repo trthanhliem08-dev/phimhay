@@ -1,0 +1,500 @@
+/* ============================================================================
+   FILE: css/watch.css
+   MỤC ĐÍCH: Giao diện riêng cho Trang Xem Phim (watch.html) & Khung Bình Luận
+   ============================================================================ */
+
+/* Chế độ Tắt đèn (Cinema Light-off) */
+body.lights-off::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 40;
+  pointer-events: none;
+}
+
+.watch-container {
+  margin-top: 22px;
+  margin-bottom: 56px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.breadcrumb a:hover {
+  color: var(--primary);
+}
+
+.breadcrumb .current {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* ==================== KHUNG TRÌNH PHÁT IFRAME ==================== */
+.player-wrapper {
+  position: relative;
+  z-index: 50;
+  background: #000;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.video-responsive {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #05070b;
+}
+
+.video-responsive iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.player-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  padding: 20px;
+  text-align: center;
+}
+
+.player-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+}
+
+.now-playing-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.now-playing-label span.ep-highlight {
+  color: var(--accent-gold);
+}
+
+.player-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-tool {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-tool:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(229, 9, 20, 0.16);
+}
+
+.btn-tool:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==================== CHỌN SERVER & DANH SÁCH TẬP ==================== */
+.episodes-box {
+  margin-top: 22px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.server-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.server-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.btn-server {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-server.active,
+.btn-server:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.episode-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.btn-episode {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 9px 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-episode:hover {
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.btn-episode.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(229, 9, 20, 0.4);
+}
+
+/* ==================== THÔNG TIN CHI TIẾT PHIM ==================== */
+.watch-bottom-layout {
+  margin-top: 26px;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.movie-detail-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  display: flex;
+  gap: 22px;
+}
+
+.detail-poster {
+  width: 165px;
+  height: 245px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+}
+
+.detail-info h1 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.detail-origin {
+  color: var(--accent-gold);
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 12px;
+}
+
+.detail-meta-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: var(--bg-main);
+  border-radius: 8px;
+}
+
+.detail-meta-list span strong {
+  color: var(--text-muted);
+}
+
+.detail-desc {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+/* ==================== KHU VỰC BÌNH LUẬN REAL-TIME ==================== */
+.comments-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 22px;
+}
+
+.comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.comments-header h2 {
+  font-size: 1.18rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  display: inline-block;
+}
+
+.comment-form-box {
+  margin-bottom: 20px;
+}
+
+.comment-user-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.comment-user-bar img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-textarea {
+  width: 100%;
+  min-height: 82px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: #fff;
+  padding: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.comment-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-send-comment {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-send-comment:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.login-prompt-box {
+  background: var(--bg-main);
+  border: 1px dashed var(--border-color);
+  padding: 16px;
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 18px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.login-prompt-box button {
+  margin-top: 8px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 12px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+
+.comment-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #1e293b;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-badge-admin {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #090d16;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.comment-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.comment-text {
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.comment-mod-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-comment-action {
+  background: none;
+  border: none;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.btn-comment-action.delete:hover {
+  color: #ef4444;
+}
+
+.btn-comment-action.ban:hover {
+  color: var(--accent-gold);
+}
+
+@media (max-width: 992px) {
+  .watch-bottom-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .movie-detail-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .detail-meta-list {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+}
