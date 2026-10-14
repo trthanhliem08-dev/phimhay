@@ -1,11 +1,11 @@
 // ============================================================================
 // FILE: js/pages/home.js
-// MỤC ĐÍCH: Điều khiển toàn bộ hoạt động của trang chủ (index.html):
-//           - Hiển thị Hero Banner phim nổi bật
-//           - Chuyển đổi danh mục (Phim mới, Phim bộ, Phim lẻ, Hoạt hình, TV Shows)
-//           - Lọc theo Thể loại & Quốc gia từ API NguonC
-//           - Tìm kiếm phim trực tiếp (Debounce) & Phân trang
-//           - Hiển thị lịch sử xem phim từ LocalStorage
+// MỤC ĐÍCH: Điều khiển trang chủ Biển Phim Hay (index.html) phiên bản nâng cấp:
+//           - Siêu Hero Banner + Poster 3D + 5 Thumbnail chọn nhanh
+//           - Bảng xếp hạng Top 10 Phim Thịnh Hành (Số thứ tự khổng lồ phát sáng)
+//           - Dải Chip Thể loại nhanh + Bộ lọc Thể loại / Quốc gia / Tìm kiếm
+//           - 2 Khu vực Spotlight bổ sung: Phim Bộ Đặc Sắc & Hoạt Hình / Anime
+//           - Hộp thoại Xem Nhanh Chi Tiết (Quick View Modal)
 // ============================================================================
 
 import {
@@ -20,7 +20,6 @@ import {
 import { initHeaderAuthUI } from "../services/auth.js";
 import { getWatchHistory, escapeHtml, showToast } from "../utils/helpers.js";
 
-// Trạng thái bộ lọc hiện tại trên trang chủ
 const state = {
   mode: "new", // 'new' | 'category' | 'genre' | 'country' | 'search'
   value: "",
@@ -33,25 +32,16 @@ const state = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Khởi tạo xác thực Firebase trên Header
   initHeaderAuthUI();
-
-  // 2. Đổ danh sách Thể loại & Quốc gia vào 2 ô select
   populateFilterDropdowns();
-
-  // 3. Hiển thị tủ phim đã xem gần đây (nếu có)
   renderHistorySection();
-
-  // 4. Gắn sự kiện cho Menu, Tìm kiếm, Bộ lọc, Phân trang
   bindEvents();
 
-  // 5. Tải dữ liệu trang chủ lần đầu
+  // Tải kho phim chính + Top 10 + 2 hàng Spotlight song song
   loadMovies();
+  loadSpotlightRows();
 });
 
-/**
- * Đổ dữ liệu Thể loại và Quốc gia vào dropdown
- */
 function populateFilterDropdowns() {
   const genreSelect = document.getElementById("filter-genre");
   const countrySelect = document.getElementById("filter-country");
@@ -75,11 +65,8 @@ function populateFilterDropdowns() {
   }
 }
 
-/**
- * Gắn sự kiện tương tác trên trang chủ
- */
 function bindEvents() {
-  // Các nút tab danh mục trên thanh điều hướng & bộ lọc nhanh
+  // 1. Menu danh mục trên Header
   const navLinks = document.querySelectorAll("[data-nav-category]");
   navLinks.forEach((link) => {
     link.addEventListener("click", (e) => {
@@ -87,11 +74,7 @@ function bindEvents() {
       navLinks.forEach((l) => l.classList.remove("active"));
       link.classList.add("active");
 
-      // Reset dropdowns
-      document.getElementById("filter-genre").value = "";
-      document.getElementById("filter-country").value = "";
-      document.getElementById("search-input").value = "";
-
+      resetFilterControls();
       const cat = link.dataset.navCategory;
       const label = link.dataset.title || link.textContent.trim();
 
@@ -105,11 +88,47 @@ function bindEvents() {
         state.title = label;
       }
       state.page = 1;
-      loadMovies();
+      loadMovies(true);
     });
   });
 
-  // Lọc theo Thể loại
+  // 2. Dải Chip Thể loại chọn nhanh (Quick Genre Pills)
+  const genrePills = document.querySelectorAll("[data-quick-genre]");
+  genrePills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      genrePills.forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+
+      const slug = pill.dataset.quickGenre;
+      if (!slug) {
+        state.mode = "new";
+        state.value = "";
+        state.title = "Phim Mới Cập Nhật";
+      } else {
+        state.mode = "genre";
+        state.value = slug;
+        state.title = `Thể loại: ${pill.textContent.replace(/^[^a-zA-ZÀ-ỹ]+/, "")}`;
+        document.getElementById("filter-genre").value = slug;
+      }
+      state.page = 1;
+      loadMovies(true);
+    });
+  });
+
+  // 3. Nút "Xem toàn bộ" ở 2 khu vực Spotlight
+  document.querySelectorAll("[data-more-cat]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const cat = btn.dataset.moreCat;
+      state.mode = "category";
+      state.value = cat;
+      state.title = cat === "phim-bo" ? "Tuyển Tập Phim Bộ" : "Thế Giới Anime & Hoạt Hình";
+      state.page = 1;
+      loadMovies(true);
+    });
+  });
+
+  // 4. Dropdown Thể loại & Quốc gia
   const genreSelect = document.getElementById("filter-genre");
   genreSelect?.addEventListener("change", () => {
     const val = genreSelect.value;
@@ -123,7 +142,6 @@ function bindEvents() {
     loadMovies();
   });
 
-  // Lọc theo Quốc gia
   const countrySelect = document.getElementById("filter-country");
   countrySelect?.addEventListener("change", () => {
     const val = countrySelect.value;
@@ -137,11 +155,9 @@ function bindEvents() {
     loadMovies();
   });
 
-  // Nút Đặt lại bộ lọc
+  // 5. Nút Làm mới bộ lọc
   document.getElementById("btn-reset-filter")?.addEventListener("click", () => {
-    document.getElementById("filter-genre").value = "";
-    document.getElementById("filter-country").value = "";
-    document.getElementById("search-input").value = "";
+    resetFilterControls();
     state.mode = "new";
     state.value = "";
     state.title = "Phim Mới Cập Nhật";
@@ -149,7 +165,7 @@ function bindEvents() {
     loadMovies();
   });
 
-  // Tìm kiếm phim (Bấm nút hoặc gõ phím với debounce 450ms)
+  // 6. Tìm kiếm phim trực tiếp
   const searchForm = document.getElementById("search-form");
   const searchInput = document.getElementById("search-input");
   let debounceTimer = null;
@@ -173,10 +189,30 @@ function bindEvents() {
     }
     debounceTimer = setTimeout(() => {
       triggerSearch(kw);
-    }, 500);
+    }, 480);
   });
 
-  // Phân trang Trước / Sau
+  // 7. Điều hướng thanh trượt Top 10
+  const trendTrack = document.getElementById("trending-track");
+  document.getElementById("trend-prev")?.addEventListener("click", () => {
+    trendTrack?.scrollBy({ left: -520, behavior: "smooth" });
+  });
+  document.getElementById("trend-next")?.addEventListener("click", () => {
+    trendTrack?.scrollBy({ left: 520, behavior: "smooth" });
+  });
+
+  // 8. Nút Xem Chi Tiết Nhanh trên Hero Banner
+  document.getElementById("hero-btn-info")?.addEventListener("click", () => {
+    const currentMovie = state.heroMovies[state.heroIndex];
+    if (currentMovie) openQuickViewModal(currentMovie);
+  });
+
+  document.getElementById("btn-close-quickview")?.addEventListener("click", closeQuickViewModal);
+  document.getElementById("quickview-modal")?.addEventListener("click", (e) => {
+    if (e.target.id === "quickview-modal") closeQuickViewModal();
+  });
+
+  // 9. Phân trang Trước / Sau
   document.getElementById("btn-prev-page")?.addEventListener("click", () => {
     if (state.page > 1) {
       state.page--;
@@ -192,6 +228,15 @@ function bindEvents() {
   });
 }
 
+function resetFilterControls() {
+  const g = document.getElementById("filter-genre");
+  const c = document.getElementById("filter-country");
+  const s = document.getElementById("search-input");
+  if (g) g.value = "";
+  if (c) c.value = "";
+  if (s) s.value = "";
+}
+
 function triggerSearch(keyword) {
   const kw = keyword.trim();
   if (!kw) return;
@@ -199,11 +244,11 @@ function triggerSearch(keyword) {
   state.value = kw;
   state.title = `Kết quả tìm kiếm: "${kw}"`;
   state.page = 1;
-  loadMovies();
+  loadMovies(true);
 }
 
 /**
- * Gọi API NguonC tương ứng với trạng thái lọc hiện tại và hiển thị ra màn hình
+ * Tải danh sách phim chính và nạp Hero Banner + Top 10 Thịnh Hành ở lần tải đầu
  */
 async function loadMovies(scrollToGrid = false) {
   const gridEl = document.getElementById("movie-grid");
@@ -212,12 +257,9 @@ async function loadMovies(scrollToGrid = false) {
 
   if (sectionTitleEl) sectionTitleEl.textContent = state.title;
   if (scrollToGrid) {
-    document
-      .getElementById("catalog-section")
-      ?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("catalog-section")?.scrollIntoView({ behavior: "smooth" });
   }
 
-  // Hiển thị hiệu ứng khung xương (Skeleton Loading) trong lúc chờ API
   renderSkeletons(gridEl, 10);
 
   try {
@@ -251,10 +293,11 @@ async function loadMovies(scrollToGrid = false) {
         : `Trang ${state.page}/${state.totalPages}`;
     }
 
-    // Nếu đang ở trang 1 của Phim Mới, nạp 5 phim đầu tiên vào Hero Banner
+    // Lần đầu vào trang chủ: Khởi tạo Hero Banner (5 phim) & Top 10 Thịnh Hành (10 phim)
     if (state.mode === "new" && state.page === 1 && movies.length > 0 && state.heroMovies.length === 0) {
       state.heroMovies = movies.slice(0, 5);
       initHeroBanner();
+      renderTrendingTop10(movies.slice(0, 10));
     }
 
     renderMovieGrid(gridEl, movies);
@@ -264,7 +307,7 @@ async function loadMovies(scrollToGrid = false) {
     showToast(error.message || "Lỗi kết nối tới API NguonC", "error");
     gridEl.innerHTML = `
       <div class="empty-state">
-        <p>⚠️ Không thể tải danh sách phim từ NguonC lúc này.</p>
+        <p><i class="ri-error-warning-line"></i> Không thể tải danh sách phim từ NguonC lúc này.</p>
         <button class="btn-retry" id="btn-retry-load">Thử tải lại</button>
       </div>
     `;
@@ -273,8 +316,59 @@ async function loadMovies(scrollToGrid = false) {
 }
 
 /**
- * Hiển thị hiệu ứng chờ (Skeleton)
+ * Tải song song 2 hàng Spotlight (Phim Bộ & Hoạt Hình) để trang chủ cực kỳ phong phú
  */
+async function loadSpotlightRows() {
+  const seriesGrid = document.getElementById("series-spotlight-grid");
+  const animeGrid = document.getElementById("anime-spotlight-grid");
+
+  renderSkeletons(seriesGrid, 5);
+  renderSkeletons(animeGrid, 5);
+
+  try {
+    const [seriesRes, animeRes] = await Promise.all([
+      getMoviesByCategory("phim-bo", 1),
+      getMoviesByCategory("hoat-hinh", 1)
+    ]);
+
+    renderMovieGrid(seriesGrid, (seriesRes.items || []).slice(0, 5));
+    renderMovieGrid(animeGrid, (animeRes.items || []).slice(0, 5));
+  } catch (err) {
+    console.warn("Không thể tải Spotlight phụ:", err);
+  }
+}
+
+/**
+ * Hiển thị Bảng xếp hạng Top 10 Phim Thịnh Hành có số thứ tự lớn phát sáng
+ */
+function renderTrendingTop10(movies) {
+  const track = document.getElementById("trending-track");
+  if (!track || !movies || movies.length === 0) return;
+
+  track.innerHTML = movies
+    .map(
+      (movie, idx) => `
+      <a href="watch.html?slug=${encodeURIComponent(movie.slug)}" class="trending-card" title="${escapeHtml(movie.name)}">
+        <span class="rank-number">${idx + 1}</span>
+        <div class="trending-poster-box">
+          <img
+            src="${escapeHtml(movie.thumb_url)}"
+            alt="${escapeHtml(movie.name)}"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='https://placehold.co/300x450/0f1b33/7dd3fc?text=Top+${idx + 1}';"
+          />
+          <span class="badge-episode">${escapeHtml(movie.current_episode)}</span>
+          <div class="trending-poster-caption">
+            <h4>${escapeHtml(movie.name)}</h4>
+            <span>${escapeHtml(movie.quality)} • ${escapeHtml(movie.language)}</span>
+          </div>
+        </div>
+      </a>
+    `
+    )
+    .join("");
+}
+
 function renderSkeletons(container, count = 10) {
   if (!container) return;
   container.innerHTML = Array.from({ length: count })
@@ -290,16 +384,13 @@ function renderSkeletons(container, count = 10) {
     .join("");
 }
 
-/**
- * Đổ danh sách thẻ phim ra lưới
- */
 function renderMovieGrid(container, movies) {
   if (!container) return;
 
   if (!movies || movies.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
-        <p>🎬 Không tìm thấy bộ phim nào phù hợp với từ khóa hoặc bộ lọc này.</p>
+        <p><i class="ri-film-line"></i> Không tìm thấy bộ phim nào phù hợp với từ khóa hoặc bộ lọc này.</p>
       </div>
     `;
     return;
@@ -314,12 +405,12 @@ function renderMovieGrid(container, movies) {
             src="${escapeHtml(movie.thumb_url)}"
             alt="${escapeHtml(movie.name)}"
             loading="lazy"
-            onerror="this.onerror=null;this.src='https://placehold.co/300x450/161d2f/e50914?text=WebPhim';"
+            onerror="this.onerror=null;this.src='https://placehold.co/300x450/0f1b33/7dd3fc?text=Biển Phim Hay';"
           />
           <span class="badge-episode">${escapeHtml(movie.current_episode)}</span>
           <span class="badge-quality">${escapeHtml(movie.quality)} • ${escapeHtml(movie.language)}</span>
           <div class="poster-overlay">
-            <div class="play-circle">▶</div>
+            <div class="play-circle"><i class="ri-play-fill"></i></div>
           </div>
         </div>
         <div class="movie-card-info">
@@ -333,7 +424,7 @@ function renderMovieGrid(container, movies) {
 }
 
 /**
- * Khởi tạo Hero Banner tự động chuyển slide trên đầu trang chủ
+ * Khởi tạo Siêu Hero Banner kèm 5 Thumbnail tương tác
  */
 function initHeroBanner() {
   const heroSection = document.getElementById("hero-banner");
@@ -345,7 +436,7 @@ function initHeroBanner() {
   state.heroTimer = setInterval(() => {
     state.heroIndex = (state.heroIndex + 1) % state.heroMovies.length;
     renderHeroSlide(state.heroIndex);
-  }, 6000);
+  }, 6500);
 }
 
 function renderHeroSlide(index) {
@@ -353,21 +444,30 @@ function renderHeroSlide(index) {
   if (!movie) return;
 
   const backdropEl = document.getElementById("hero-backdrop");
+  const floatingPosterEl = document.getElementById("hero-floating-poster");
+  const floatingBadgeEl = document.getElementById("hero-floating-badge");
   const titleEl = document.getElementById("hero-title");
   const originEl = document.getElementById("hero-origin");
   const metaEl = document.getElementById("hero-meta");
   const descEl = document.getElementById("hero-desc");
   const playBtn = document.getElementById("hero-btn-play");
+  const thumbsEl = document.getElementById("hero-thumbs");
   const dotsEl = document.getElementById("hero-dots");
 
   if (backdropEl) {
     backdropEl.style.backgroundImage = `url('${movie.poster_url || movie.thumb_url}')`;
   }
+  if (floatingPosterEl) {
+    floatingPosterEl.src = movie.thumb_url || movie.poster_url;
+  }
+  if (floatingBadgeEl) {
+    floatingBadgeEl.textContent = `${movie.current_episode} • ${movie.quality}`;
+  }
   if (titleEl) titleEl.textContent = movie.name;
   if (originEl) originEl.textContent = movie.original_name;
   if (metaEl) {
     metaEl.innerHTML = `
-      <span class="hero-tag hot">🔥 Thịnh hành</span>
+      <span class="hero-tag hot"><span class="live-ping"></span> <i class="ri-fire-fill"></i> TOP #${index + 1} ĐỀ CỬ</span>
       <span class="hero-tag">${escapeHtml(movie.current_episode)}</span>
       <span class="hero-tag">${escapeHtml(movie.quality)}</span>
       <span class="hero-tag">${escapeHtml(movie.language)}</span>
@@ -377,10 +477,34 @@ function renderHeroSlide(index) {
     descEl.textContent =
       movie.description && movie.description.length > 10
         ? movie.description
-        : `Thưởng thức bộ phim ${movie.name} (${movie.original_name}) chất lượng cao Vietsub / Thuyết minh cập nhật nhanh nhất từ NguonC.`;
+        : `Thưởng thức bộ phim ${movie.name} (${movie.original_name}) chất lượng cao Vietsub / Thuyết minh cập nhật nhanh nhất trên Biển Phim Hay.`;
   }
   if (playBtn) {
     playBtn.href = `watch.html?slug=${encodeURIComponent(movie.slug)}`;
+  }
+
+  // Render 5 Thumbnail chọn nhanh
+  if (thumbsEl) {
+    thumbsEl.innerHTML = state.heroMovies
+      .map(
+        (m, i) => `
+        <div class="hero-thumb-item ${i === index ? "active" : ""}" data-thumb-idx="${i}">
+          <img src="${escapeHtml(m.thumb_url)}" alt="${escapeHtml(m.name)}" />
+          <div class="hero-thumb-info">
+            <h4>${escapeHtml(m.name)}</h4>
+            <span>${escapeHtml(m.current_episode)}</span>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    thumbsEl.querySelectorAll(".hero-thumb-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        state.heroIndex = Number(item.dataset.thumbIdx);
+        renderHeroSlide(state.heroIndex);
+      });
+    });
   }
 
   if (dotsEl) {
@@ -401,8 +525,35 @@ function renderHeroSlide(index) {
 }
 
 /**
- * Cập nhật thanh phân trang
+ * Mở hộp thoại Xem Nhanh Chi Tiết (Quick View Modal)
  */
+function openQuickViewModal(movie) {
+  const modal = document.getElementById("quickview-modal");
+  const body = document.getElementById("quickview-body");
+  if (!modal || !body) return;
+
+  body.innerHTML = `
+    <img src="${escapeHtml(movie.thumb_url)}" alt="${escapeHtml(movie.name)}" />
+    <div>
+      <span class="brand-badge">${escapeHtml(movie.current_episode)} • ${escapeHtml(movie.quality)}</span>
+      <h2 style="font-size: 1.6rem; margin-bottom: 4px;">${escapeHtml(movie.name)}</h2>
+      <p style="color: var(--accent-aqua); font-weight: 600; margin-bottom: 12px;">${escapeHtml(movie.original_name)}</p>
+      <p style="color: #cbd5e1; font-size: 0.92rem; margin-bottom: 18px; line-height: 1.6;">
+        ${escapeHtml(movie.description || "Bấm Xem Phim Ngay để thưởng thức trọn bộ với tốc độ cao.")}
+      </p>
+      <a href="watch.html?slug=${encodeURIComponent(movie.slug)}" class="btn-hero-play" style="display: inline-flex;">
+        <span class="play-icon-ring"><i class="ri-play-fill"></i></span>
+        <span>Vào Xem Phim Ngay</span>
+      </a>
+    </div>
+  `;
+  modal.classList.add("active");
+}
+
+function closeQuickViewModal() {
+  document.getElementById("quickview-modal")?.classList.remove("active");
+}
+
 function updatePaginationUI() {
   const pageInfo = document.getElementById("page-indicator");
   const prevBtn = document.getElementById("btn-prev-page");
@@ -415,9 +566,6 @@ function updatePaginationUI() {
   if (nextBtn) nextBtn.disabled = state.page >= state.totalPages;
 }
 
-/**
- * Hiển thị khu vực "Phim Đang Xem Dở" từ LocalStorage
- */
 function renderHistorySection() {
   const history = getWatchHistory();
   const section = document.getElementById("history-section");

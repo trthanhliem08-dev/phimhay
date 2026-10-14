@@ -3,30 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebPhimTest - Xem Phim HD Vietsub Miễn Phí</title>
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <title>Biển Phim Hay — Rạp Phim Trực Tuyến Chuẩn Điện Ảnh</title>
+  <!-- Bộ Icon Vector sắc nét RemixIcon CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
   <!-- CSS chính của hệ thống -->
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
 
-  <!-- ==================== HEADER / THANH ĐIỀU HƯỚNG ==================== -->
+  <!-- HIỆU ỨNG ÁNH SÁNG NỀN AURORA XANH BIỂN PASTEL CHUYỂN ĐỘNG -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="aurora-orb orb-1"></div>
+    <div class="aurora-orb orb-2"></div>
+    <div class="aurora-orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- ==================== HEADER / THANH ĐIỀU HƯỚNG KÍNH MỜ ==================== -->
   <header class="site-header">
     <div class="container header-inner">
       <a href="index.html" class="brand-logo">
-        <span class="brand-icon">▶</span>
-        <span>WEB<span class="highlight">PHIM</span></span>
+        <span class="brand-icon">
+          <span class="icon-pulse"></span>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"></polygon>
+          </svg>
+        </span>
+        <div class="brand-wordmark">
+          <span class="brand-text">BIỂN <span class="highlight">PHIM HAY</span></span>
+          <span class="brand-sub">OCEAN CINEMA HD</span>
+        </div>
       </a>
 
       <nav class="main-nav">
-        <a href="#" class="nav-link active" data-nav-category="phim-moi-cap-nhat" data-title="Phim Mới Cập Nhật">Trang Chủ</a>
-        <a href="#" class="nav-link" data-nav-category="phim-bo" data-title="Danh Sách Phim Bộ">Phim Bộ</a>
-        <a href="#" class="nav-link" data-nav-category="phim-le" data-title="Danh Sách Phim Lẻ">Phim Lẻ</a>
-        <a href="#" class="nav-link" data-nav-category="hoat-hinh" data-title="Phim Hoạt Hình / Anime">Hoạt Hình</a>
-        <a href="#" class="nav-link" data-nav-category="tv-shows" data-title="Chương Trình Truyền Hình">TV Shows</a>
+        <a href="#" class="nav-link active" data-nav-category="phim-moi-cap-nhat" data-title="Phim Mới Cập Nhật">
+          <i class="ri-compass-3-fill"></i>
+          <span>Khám Phá</span>
+        </a>
+        <a href="#" class="nav-link" data-nav-category="phim-bo" data-title="Tuyển Tập Phim Bộ">
+          <i class="ri-tv-2-fill"></i>
+          <span>Phim Bộ</span>
+        </a>
+        <a href="#" class="nav-link" data-nav-category="phim-le" data-title="Phim Lẻ Điện Ảnh">
+          <i class="ri-film-fill"></i>
+          <span>Phim Lẻ</span>
+        </a>
+        <a href="#" class="nav-link" data-nav-category="hoat-hinh" data-title="Thế Giới Anime & Hoạt Hình">
+          <i class="ri-sparkling-2-fill"></i>
+          <span>Hoạt Hình</span>
+        </a>
+        <a href="#" class="nav-link" data-nav-category="tv-shows" data-title="Chương Trình Giải Trí">
+          <i class="ri-vidicon-2-fill"></i>
+          <span>TV Shows</span>
+        </a>
       </nav>
 
       <div class="header-actions">
@@ -34,99 +63,333 @@
           <input
             type="text"
             id="search-input"
-            placeholder="Tìm tên phim, diễn viên..."
+            placeholder="Tìm phim, đạo diễn, diễn viên..."
             autocomplete="off"
           />
-          <button type="submit" title="Tìm kiếm">🔍</button>
+          <button type="submit" title="Tìm kiếm">
+            <i class="ri-search-2-line"></i>
+          </button>
         </form>
 
         <!-- Khu vực tài khoản Firebase (Tự động nạp bởi js/services/auth.js) -->
         <div id="header-user-area">
-          <button class="btn-login-header" id="btn-open-auth">Đăng nhập</button>
+          <button class="btn-login-header" id="btn-open-auth">
+            <i class="ri-user-3-line"></i>
+            <span>Đăng nhập</span>
+          </button>
         </div>
       </div>
     </div>
   </header>
 
   <!-- ==================== NỘI DUNG CHÍNH ==================== -->
-  <main class="container">
+  <main class="container main-wrapper">
 
-    <!-- 1. HERO BANNER (Tự động lấy 5 phim mới nhất từ NguonC) -->
+    <!-- 1. SIÊU HERO BANNER ĐIỆN ẢNH (CÓ POSTER 3D & THUMBNAIL CHỌN NHANH) -->
     <section id="hero-banner" class="hero-banner">
       <div id="hero-backdrop" class="hero-backdrop"></div>
       <div class="hero-gradient"></div>
 
-      <div class="hero-content">
-        <div id="hero-meta" class="hero-meta">
-          <span class="hero-tag hot">🔥 Đang tải phim nổi bật...</span>
+      <div class="hero-layout">
+        <!-- Cột trái: Nội dung phim nổi bật -->
+        <div class="hero-content">
+          <div id="hero-meta" class="hero-meta">
+            <span class="hero-tag hot">
+              <span class="live-ping"></span>
+              <i class="ri-fire-fill"></i> SIÊU PHẨM ĐỀ CỬ
+            </span>
+          </div>
+          <h1 id="hero-title" class="hero-title">Khám Phá Đại Dương Điện Ảnh</h1>
+          <p id="hero-origin" class="hero-origin">Biển Phim Hay — Sắc nét từng khung hình</p>
+          <p id="hero-desc" class="hero-desc">
+            Thưởng thức hàng ngàn bộ phim bom tấn, phim bộ châu Á, Âu Mỹ và Anime với chất lượng Full HD kèm bình luận trực tiếp thời gian thực.
+          </p>
+
+          <div class="hero-buttons">
+            <a id="hero-btn-play" href="#catalog-section" class="btn-hero-play">
+              <span class="play-icon-ring"><i class="ri-play-fill"></i></span>
+              <span>Xem Phim Ngay</span>
+            </a>
+            <button type="button" id="hero-btn-info" class="btn-hero-glass">
+              <i class="ri-information-line"></i>
+              <span>Chi Tiết Nhanh</span>
+            </button>
+          </div>
         </div>
-        <h1 id="hero-title" class="hero-title">Khám Phá Kho Phim Điện Ảnh</h1>
-        <p id="hero-origin" class="hero-origin">Nguồn dữ liệu trực tiếp từ API NguonC</p>
-        <p id="hero-desc" class="hero-desc">
-          Hệ thống tự động cập nhật phim bộ, phim lẻ, hoạt hình chất lượng FHD Vietsub và Thuyết minh kèm bình luận thời gian thực.
-        </p>
-        <div class="hero-buttons">
-          <a id="hero-btn-play" href="#catalog-section" class="btn-hero-play">
-            <span>▶ Xem Phim Ngay</span>
-          </a>
+
+        <!-- Cột phải: Thẻ Poster 3D lơ lửng phát sáng -->
+        <div class="hero-poster-showcase">
+          <div class="floating-poster-card">
+            <img
+              id="hero-floating-poster"
+              src="https://placehold.co/320x460/0f1b33/7dd3fc?text=BIEN+PHIM+HAY"
+              alt="Featured Poster"
+            />
+            <span id="hero-floating-badge" class="floating-ep-badge">
+              <i class="ri-hd-fill"></i> FHD • Vietsub
+            </span>
+          </div>
         </div>
       </div>
 
-      <div id="hero-dots" class="hero-dots"></div>
-    </section>
-
-    <!-- 2. THANH BỘ LỌC THỂ LOẠI & QUỐC GIA -->
-    <section class="filter-bar">
-      <div class="filter-controls">
-        <select id="filter-genre" class="filter-select">
-          <option value="">-- Lọc theo Thể Loại --</option>
-        </select>
-
-        <select id="filter-country" class="filter-select">
-          <option value="">-- Lọc theo Quốc Gia --</option>
-        </select>
-
-        <button type="button" id="btn-reset-filter" class="btn-reset">
-          ↻ Đặt lại mặc định
-        </button>
+      <!-- Dải Thumbnail 5 phim hot chọn nhanh + Dots -->
+      <div class="hero-bottom-bar">
+        <div id="hero-thumbs" class="hero-thumbs"></div>
+        <div id="hero-dots" class="hero-dots"></div>
       </div>
-      <span id="total-items-badge" class="total-badge">Đang đồng bộ API...</span>
     </section>
 
-    <!-- 3. TỦ PHIM ĐANG XEM DỞ (Tự động hiện nếu LocalStorage có lịch sử) -->
+    <!-- 2. DẢI CHIP THỂ LOẠI CHỌN NHANH (VECTOR ICON PILLS) -->
+    <section class="quick-genres-strip">
+      <button type="button" class="genre-pill active" data-quick-genre="">
+        <i class="ri-apps-2-fill"></i> Tất Cả Mới Nhất
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="hanh-dong">
+        <i class="ri-sword-fill"></i> Hành Động
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="tinh-cam">
+        <i class="ri-heart-3-fill"></i> Tình Cảm
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="vien-tuong">
+        <i class="ri-planet-fill"></i> Viễn Tưởng
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="co-trang">
+        <i class="ri-ancient-gate-fill"></i> Cổ Trang
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="kinh-di">
+        <i class="ri-skull-2-fill"></i> Kinh Dị
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="hai-huoc">
+        <i class="ri-emotion-laugh-fill"></i> Hài Hước
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="bi-an">
+        <i class="ri-spy-fill"></i> Bí Ẩn
+      </button>
+      <button type="button" class="genre-pill" data-quick-genre="hoc-duong">
+        <i class="ri-graduation-cap-fill"></i> Học Đường
+      </button>
+    </section>
+
+    <!-- 3. TỦ PHIM ĐANG XEM DỞ -->
     <section id="history-section" class="history-section" style="display: none;">
       <div class="section-header">
-        <h2>Xem Tiếp Gần Đây</h2>
+        <div class="section-title-group">
+          <span class="section-eyebrow"><i class="ri-time-line"></i> TIẾP TỤC HÀNH TRÌNH</span>
+          <h2>Phim Bạn Đang Xem Dở</h2>
+        </div>
       </div>
       <div id="history-grid" class="history-grid"></div>
     </section>
 
-    <!-- 4. DANH SÁCH PHIM CHÍNH -->
-    <section id="catalog-section" class="catalog-section">
+    <!-- 4. BẢNG XẾP HẠNG TOP 10 THỊNH HÀNH -->
+    <section id="trending-section" class="trending-section">
       <div class="section-header">
-        <h2 id="section-title">Phim Mới Cập Nhật</h2>
+        <div class="section-title-group">
+          <span class="section-eyebrow"><i class="ri-fire-line"></i> BẢNG XẾP HẠNG HÔM NAY</span>
+          <h2>Top 10 Phim Thịnh Hành Nhất</h2>
+        </div>
+        <div class="carousel-nav-btns">
+          <button type="button" class="btn-carousel-nav" id="trend-prev" title="Trượt sang trái">
+            <i class="ri-arrow-left-s-line"></i>
+          </button>
+          <button type="button" class="btn-carousel-nav" id="trend-next" title="Trượt sang phải">
+            <i class="ri-arrow-right-s-line"></i>
+          </button>
+        </div>
+      </div>
+      <div id="trending-track" class="trending-track"></div>
+    </section>
+
+    <!-- 5. THANH BỘ LỌC NÂNG CAO & KHO PHIM TỔNG HỢP -->
+    <section id="catalog-section" class="catalog-section">
+      <div class="filter-bar">
+        <div class="section-title-group">
+          <span class="section-eyebrow"><i class="ri-movie-2-line"></i> DANH MỤC TRỰC TUYẾN</span>
+          <h2 id="section-title">Phim Mới Cập Nhật</h2>
+        </div>
+
+        <div class="filter-controls">
+          <div class="select-wrapper">
+            <i class="ri-Stack-line select-icon"></i>
+            <select id="filter-genre" class="filter-select">
+              <option value="">Tất cả Thể Loại</option>
+            </select>
+          </div>
+
+          <div class="select-wrapper">
+            <i class="ri-earth-line select-icon"></i>
+            <select id="filter-country" class="filter-select">
+              <option value="">Tất cả Quốc Gia</option>
+            </select>
+          </div>
+
+          <button type="button" id="btn-reset-filter" class="btn-reset">
+            <i class="ri-refresh-line"></i> Làm mới
+          </button>
+          <span id="total-items-badge" class="total-badge">Đang đồng bộ...</span>
+        </div>
       </div>
 
+      <!-- Lưới thẻ phim chính -->
       <div id="movie-grid" class="movie-grid"></div>
 
       <!-- Thanh phân trang -->
       <div class="pagination-bar">
         <button type="button" id="btn-prev-page" class="btn-page" disabled>
-          ← Trang trước
+          <i class="ri-arrow-left-line"></i> Trang trước
         </button>
         <span id="page-indicator" class="page-indicator">Trang 1 / 1</span>
         <button type="button" id="btn-next-page" class="btn-page">
-          Trang sau →
+          Trang sau <i class="ri-arrow-right-line"></i>
         </button>
       </div>
     </section>
 
+    <!-- 6. HAI KHU VỰC ĐẶC SẮC BỔ SUNG (PHIM BỘ HOT & ANIME MỚI) -->
+    <section id="spotlight-series-section" class="spotlight-section">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="section-eyebrow"><i class="ri-tv-line"></i> CẬP NHẬT LIÊN TỤC</span>
+          <h2>Phim Bộ Dài Tập Đặc Sắc</h2>
+        </div>
+        <a href="#catalog-section" class="btn-view-more" data-more-cat="phim-bo">
+          <span>Xem toàn bộ</span>
+          <i class="ri-arrow-right-up-line"></i>
+        </a>
+      </div>
+      <div id="series-spotlight-grid" class="movie-grid spotlight-grid"></div>
+    </section>
+
+    <section id="spotlight-anime-section" class="spotlight-section">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="section-eyebrow"><i class="ri-sparkling-line"></i> THẾ GIỚI 2D & 3D</span>
+          <h2>Siêu Phẩm Hoạt Hình & Anime</h2>
+        </div>
+        <a href="#catalog-section" class="btn-view-more" data-more-cat="hoat-hinh">
+          <span>Xem toàn bộ</span>
+          <i class="ri-arrow-right-up-line"></i>
+        </a>
+      </div>
+      <div id="anime-spotlight-grid" class="movie-grid spotlight-grid"></div>
+    </section>
+
   </main>
 
-  <!-- ==================== FOOTER ==================== -->
+  <!-- ==================== MODAL XEM NHANH CHI TIẾT PHIM ==================== -->
+  <div id="quickview-modal" class="quickview-overlay">
+    <div class="quickview-card">
+      <button type="button" class="quickview-close" id="btn-close-quickview">
+        <i class="ri-close-line"></i>
+      </button>
+      <div id="quickview-body" class="quickview-body"></div>
+    </div>
+  </div>
+
+  <!-- ==================== LUXURY WORLD-CLASS FOOTER ==================== -->
   <footer class="site-footer">
+    <div class="footer-glow-line"></div>
     <div class="container">
-      <p>© 2026 <strong>WebPhimTest</strong> — Chạy trên nền tảng API NguonC & Firebase Realtime.</p>
+      <div class="footer-grid">
+        <!-- Cột 1: Thương hiệu Biển Phim Hay -->
+        <div class="footer-col brand-col">
+          <a href="index.html" class="brand-logo">
+            <span class="brand-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+              </svg>
+            </span>
+            <div class="brand-wordmark">
+              <span class="brand-text">BIỂN <span class="highlight">PHIM HAY</span></span>
+              <span class="brand-sub">OCEAN CINEMA HD</span>
+            </div>
+          </a>
+          <p class="footer-desc">
+            Nền tảng thưởng thức điện ảnh trực tuyến thế hệ mới với giao diện đẹp mắt, thân thiện với người dùng.
+          </p>
+          <p class="footer-desc">
+            <strong>Biển Phim,</strong> Phim hay cả biển
+
+          </p>
+          <div class="server-status-pill">
+            <span class="status-dot"></span>
+            <span>Hệ thống xem phim hiện đại, ổn định.</span>
+          </div>
+        </div>
+
+        <!-- Cột 2: Danh mục khám phá -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Danh Mục Phim</h4>
+          <ul class="footer-links">
+            <li><a href="index.html"><i class="ri-compass-3-line"></i> Phim Mới Cập Nhật</a></li>
+            <li><a href="index.html"><i class="ri-tv-2-line"></i> Tuyển Tập Phim Bộ</a></li>
+            <li><a href="index.html"><i class="ri-film-line"></i> Phim Lẻ Điện Ảnh</a></li>
+            <li><a href="index.html"><i class="ri-Mickey-line"></i> Hoạt Hình & Anime</a></li>
+            <li><a href="index.html"><i class="ri-Vip-crown-2-line"></i> Top 10 Thịnh Hành</a></li>
+          </ul>
+        </div>
+
+        <!-- Cột 3: Tiện ích người dùng -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Trải Nghiệm</h4>
+          <ul class="footer-links">
+            <li><a href="profile.html"><i class="ri-user-smile-line"></i> Hồ Sơ & Đổi Avatar</a></li>
+            <li><a href="profile.html"><i class="ri-history-line"></i> Lịch Sử Xem Phim</a></li>
+            <li><a href="index.html"><i class="ri-chat-smile-3-line"></i> Bình Luận Real-time</a></li>
+            <li><a href="admin.html"><i class="ri-shield-star-line"></i> Trung Tâm Quản Trị</a></li>
+          </ul>
+        </div>
+
+        <!-- Cột 4: Liên hệ Quản trị viên (Facebook, Discord, Email) -->
+        <div class="footer-col contact-col">
+          <h4 class="footer-heading">Contact For More</h4>
+          <p class="contact-sub">Hỗ trợ kỹ thuật, góp ý tính năng hoặc báo lỗi tập phim trực tiếp với Admin:</p>
+
+          <div class="admin-contact-cards">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-contact-card fb">
+              <div class="social-icon-box">
+                <i class="ri-facebook-circle-fill"></i>
+              </div>
+              <div class="social-meta">
+                <span class="social-label">Facebook Admin</span>
+                <strong>Biển Phim Hay Official</strong>
+              </div>
+              <i class="ri-arrow-right-up-line external-arrow"></i>
+            </a>
+
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="social-contact-card discord">
+              <div class="social-icon-box">
+                <i class="ri-discord-fill"></i>
+              </div>
+              <div class="social-meta">
+                <span class="social-label">Group Discord</span>
+                <strong>Biển Phim</strong>
+              </div>
+              <i class="ri-arrow-right-up-line external-arrow"></i>
+            </a>
+
+            <a href="mailto:liemtrumscam@gmail.com" class="social-contact-card email">
+              <div class="social-icon-box">
+                <i class="ri-mail-send-fill"></i>
+              </div>
+              <div class="social-meta">
+                <span class="social-label">Email Admin</span>
+                <strong>Click To Send</strong>
+              </div>
+              <i class="ri-arrow-right-up-line external-arrow"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 <strong>Biển Phim Hay</strong>. Kho phim điện ảnh miễn phí chất lượng cao</p>
+        <div class="footer-bottom-badges">
+          <span><i class="ri-hd-line"></i> Full HD 1080p</span>
+          <span><i class="ri-flashlight-line"></i> Speed Connect</span>
+          <span><i class="ri-shield-check-line"></i> Admin Verified</span>
+        </div>
+      </div>
     </div>
   </footer>
 

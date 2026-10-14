@@ -76,13 +76,13 @@ async function loadMovieData() {
       (srv) => Array.isArray(srv.items) && srv.items.length > 0
     );
 
-    document.title = `${movie.name} - WebPhimTest`;
+    document.title = `${movie.name} - Biển Phim Hay`;
     renderMovieDetails(movie);
 
     if (watchState.servers.length === 0) {
       const placeholder = document.getElementById("player-placeholder");
       if (placeholder) {
-        placeholder.innerHTML = `<p>⚠️ Phim này hiện chưa có link embed từ NguonC.</p>`;
+        placeholder.innerHTML = `<p><i class="ri-error-warning-line"></i> Phim này hiện chưa có link embed từ NguonC.</p>`;
       }
       return;
     }
@@ -134,7 +134,7 @@ function renderServerTabs() {
     )
     .join("");
 
-  container.innerHTML = `<span class="server-label">🖧 Chọn Server:</span> ${buttonsHtml}`;
+  container.innerHTML = `<span class="server-label"><i class="ri-base-station-line"></i> Chọn Server:</span> ${buttonsHtml}`;
 
   container.querySelectorAll(".btn-server").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -206,7 +206,7 @@ function playEpisode(serverIndex, episodeIndex) {
     iframe.style.display = "none";
     if (placeholder) {
       placeholder.style.display = "flex";
-      placeholder.innerHTML = `<p>⚠️ Tập này chưa có link nhúng (embed).</p>`;
+      placeholder.innerHTML = `<p><i class="ri-error-warning-line"></i> Tập này chưa có link nhúng (embed).</p>`;
     }
   }
 
@@ -250,7 +250,7 @@ function bindPlayerToolbarEvents() {
   lightsBtn?.addEventListener("click", () => {
     document.body.classList.toggle("lights-off");
     const isOff = document.body.classList.contains("lights-off");
-    lightsBtn.textContent = isOff ? "💡 Bật đèn" : "💡 Tắt đèn";
+    lightsBtn.innerHTML = isOff ? '<i class="ri-sun-line"></i> <span>Bật đèn</span>' : '<i class="ri-lightbulb-flash-line"></i> <span>Tắt đèn</span>';
   });
 }
 
@@ -399,12 +399,12 @@ function startRealtimeComments() {
                   ? `<div class="comment-mod-actions">
                        ${
                          canDelete
-                           ? `<button type="button" class="btn-comment-action delete" data-del-id="${cmt.id}">🗑 Xóa bình luận</button>`
+                           ? `<button type="button" class="btn-comment-action delete" data-del-id="${cmt.id}"><i class="ri-delete-bin-6-line"></i> Xóa bình luận</button>`
                            : ""
                        }
                        ${
                          canBan
-                           ? `<button type="button" class="btn-comment-action ban" data-ban-uid="${cmt.uid}">🚫 Chặn người dùng này</button>`
+                           ? `<button type="button" class="btn-comment-action ban" data-ban-uid="${cmt.uid}"><i class="ri-forbid-2-line"></i> Chặn người dùng</button>`
                            : ""
                        }
                      </div>`

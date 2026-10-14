@@ -2,7 +2,7 @@
 // FILE: js/services/auth.js
 // MỤC ĐÍCH: Quản lý Đăng nhập (Google & Email), Đăng xuất, đồng bộ hồ sơ
 //           vào bảng `users` trên Firestore, kiểm tra quyền Admin theo email
-//           `liemtran.238460@gmail.com` và tự động cập nhật thanh Header.
+//           `liemtran.238460@gmail.com` và báo lỗi chi tiết dễ hiểu.
 // ============================================================================
 
 import {
@@ -50,37 +50,76 @@ export function isAdminEmail(email) {
 }
 
 /**
- * Đồng bộ thông tin user từ Firebase Auth vào bảng `users` trong Firestore
+ * Tạo hồ sơ dự phòng trực tiếp từ tài khoản Google/Email nếu Firestore chưa bật hoặc chặn quyền
+ */
+function buildFallbackProfile(firebaseUser) {
+  const isUserAdmin = isAdminEmail(firebaseUser.email);
+  return {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email || "",
+    displayName:
+      firebaseUser.displayName ||
+      (firebaseUser.email ? firebaseUser.email.split("@")[0] : "Thành viên"),
+    avatarUrl: firebaseUser.photoURL || DEFAULT_AVATARS[0],
+    role: isUserAdmin ? "admin" : "user",
+    isBanned: false
+  };
+}
+
+/**
+ * Đồng bộ thông tin user từ Firebase Auth vào bảng `users` trong Firestore.
+ * Nếu Firestore chưa tạo hoặc bị chặn Rules, vẫn trả về hồ sơ tạm để không làm gãy đăng nhập!
  */
 async function syncUserToFirestore(firebaseUser) {
-  const userRef = doc(db, "users", firebaseUser.uid);
-  const userSnap = await getDoc(userRef);
+  const fallback = buildFallbackProfile(firebaseUser);
+  try {
+    const userRef = doc(db, "users", firebaseUser.uid);
+    const userSnap = await getDoc(userRef);
+    const isUserAdmin = isAdminEmail(firebaseUser.email);
 
-  const isUserAdmin = isAdminEmail(firebaseUser.email);
-
-  if (!userSnap.exists()) {
-    const newProfile = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email || "",
-      displayName:
-        firebaseUser.displayName ||
-        (firebaseUser.email ? firebaseUser.email.split("@")[0] : "Thành viên"),
-      avatarUrl: firebaseUser.photoURL || DEFAULT_AVATARS[0],
-      role: isUserAdmin ? "admin" : "user",
-      isBanned: false,
-      createdAt: serverTimestamp()
-    };
-    await setDoc(userRef, newProfile);
-    return newProfile;
-  } else {
-    const existingData = userSnap.data();
-    // Đảm bảo nếu đúng email Admin thì luôn giữ role = "admin"
-    if (isUserAdmin && existingData.role !== "admin") {
-      await setDoc(userRef, { role: "admin" }, { merge: true });
-      existingData.role = "admin";
+    if (!userSnap.exists()) {
+      const newProfile = {
+        ...fallback,
+        createdAt: serverTimestamp()
+      };
+      await setDoc(userRef, newProfile);
+      return newProfile;
+    } else {
+      const existingData = userSnap.data();
+      if (isUserAdmin && existingData.role !== "admin") {
+        await setDoc(userRef, { role: "admin" }, { merge: true });
+        existingData.role = "admin";
+      }
+      return existingData;
     }
-    return existingData;
+  } catch (firestoreErr) {
+    console.warn("Cảnh báo Firestore khi đồng bộ user:", firestoreErr);
+    showToast(
+      `Đã đăng nhập, nhưng Firestore báo lỗi (${firestoreErr.code || "chưa mở quyền Rules"}).`,
+      "info"
+    );
+    return fallback;
   }
+}
+
+/**
+ * Dịch mã lỗi Firebase Auth sang tiếng Việt chỉ rõ cách sửa
+ */
+function translateAuthError(error) {
+  const code = error?.code || "";
+  if (code === "auth/unauthorized-domain") {
+    return `Tên miền "${window.location.hostname}" chưa được thêm vào Authorized domains trên Firebase!`;
+  }
+  if (code === "auth/operation-not-allowed") {
+    return "Bạn chưa bật công tắc Google (hoặc Email) trong mục Authentication -> Sign-in method!";
+  }
+  if (code === "auth/popup-blocked") {
+    return "Trình duyệt đã chặn cửa sổ bật lên (Popup). Hãy cho phép Popup trên web này!";
+  }
+  if (code === "auth/popup-closed-by-user") {
+    return "Bạn đã đóng cửa sổ đăng nhập Google trước khi hoàn tất.";
+  }
+  return `Lỗi đăng nhập (${code || error.message})`;
 }
 
 /**
@@ -98,8 +137,8 @@ export async function loginWithGoogle() {
     closeAuthModal();
     return profile;
   } catch (error) {
-    console.error("Lỗi đăng nhập Google:", error);
-    showToast("Đăng nhập Google thất bại hoặc đã hủy.", "error");
+    console.error("Chi tiết lỗi đăng nhập Google:", error);
+    showToast(translateAuthError(error), "error");
     throw error;
   }
 }
@@ -116,7 +155,7 @@ export async function loginWithEmail(email, password) {
     return profile;
   } catch (error) {
     console.error("Lỗi đăng nhập Email:", error);
-    showToast("Email hoặc mật khẩu không chính xác!", "error");
+    showToast(translateAuthError(error), "error");
     throw error;
   }
 }
@@ -138,7 +177,7 @@ export async function registerWithEmail(displayName, email, password) {
     return profile;
   } catch (error) {
     console.error("Lỗi đăng ký:", error);
-    showToast(error.message || "Không thể đăng ký tài khoản.", "error");
+    showToast(translateAuthError(error), "error");
     throw error;
   }
 }
@@ -177,7 +216,7 @@ function renderAuthModal() {
       <div class="auth-modal-card">
         <button class="auth-modal-close" id="btn-close-auth" title="Đóng">&times;</button>
         <div class="auth-modal-header">
-          <span class="brand-badge">WEBPHIM</span>
+          <span class="brand-badge">BIỂN PHIM HAY</span>
           <h3 id="auth-modal-title">Đăng nhập tài khoản</h3>
           <p>Đăng nhập để bình luận real-time, đổi Avatar và lưu tủ phim</p>
         </div>
@@ -278,7 +317,7 @@ export function initHeaderAuthUI() {
       if (userArea) {
         userArea.innerHTML = `
           <button class="btn-login-header" id="btn-open-auth">
-            <span>Đăng nhập</span>
+            <i class="ri-user-3-line"></i> <span>Đăng nhập</span>
           </button>
         `;
         document
@@ -299,7 +338,7 @@ export function initHeaderAuthUI() {
             ${
               isAdmin
                 ? `<a href="admin.html" class="btn-admin-badge" title="Chỉ hiển thị cho ${ADMIN_EMAIL}">
-                     🛡️ Quản trị Web
+                     <i class="ri-shield-star-fill"></i> Quản trị Web
                    </a>`
                 : ""
             }
@@ -307,7 +346,7 @@ export function initHeaderAuthUI() {
               <img src="${escapeHtml(profile.avatarUrl)}" alt="Avatar" class="header-avatar" />
               <span class="header-username">${escapeHtml(profile.displayName)}</span>
             </a>
-            <button class="btn-logout-icon" id="btn-header-logout" title="Đăng xuất">⏻</button>
+            <button class="btn-logout-icon" id="btn-header-logout" title="Đăng xuất"><i class="ri-shut-down-line"></i></button>
           </div>
         `;
 

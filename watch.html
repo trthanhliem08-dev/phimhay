@@ -3,30 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Đang Xem Phim - WebPhimTest</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <title>Đang Xem Phim — Biển Phim Hay</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
   <link rel="stylesheet" href="./css/style.css" />
   <link rel="stylesheet" href="./css/watch.css" />
 </head>
 <body>
 
-  <!-- ==================== HEADER ==================== -->
+  <!-- HIỆU ỨNG ÁNH SÁNG NỀN AURORA -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="aurora-orb orb-1"></div>
+    <div class="aurora-orb orb-2"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- ==================== HEADER (GỌN GÀNG: LOGO TRÁI - USER PHẢI) ==================== -->
   <header class="site-header">
     <div class="container header-inner">
-      <a href="index.html" class="brand-logo">
-        <span class="brand-icon">▶</span>
-        <span>WEB<span class="highlight">PHIM</span></span>
+      <a href="index.html" class="brand-logo" title="Về trang chủ Biển Phim Hay">
+        <span class="brand-icon">
+          <span class="icon-pulse"></span>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"></polygon>
+          </svg>
+        </span>
+        <div class="brand-wordmark">
+          <span class="brand-text">BIỂN <span class="highlight">PHIM HAY</span></span>
+          <span class="brand-sub">OCEAN CINEMA HD</span>
+        </div>
       </a>
-
-      <nav class="main-nav">
-        <a href="index.html" class="nav-link">← Quay lại Trang Chủ</a>
-      </nav>
 
       <div class="header-actions">
         <div id="header-user-area">
-          <button class="btn-login-header" id="btn-open-auth">Đăng nhập</button>
+          <button class="btn-login-header" id="btn-open-auth">
+            <i class="ri-user-3-line"></i>
+            <span>Đăng nhập</span>
+          </button>
         </div>
       </div>
     </div>
@@ -35,18 +47,28 @@
   <!-- ==================== NỘI DUNG XEM PHIM ==================== -->
   <main class="container watch-container">
 
-    <!-- Đường dẫn Breadcrumb -->
-    <div class="breadcrumb">
-      <a href="index.html">Trang chủ</a>
-      <span>/</span>
-      <span id="breadcrumb-title" class="current">Đang tải phim...</span>
+    <!-- THANH ĐIỀU HƯỚNG PHỤ NẰM DƯỚI HEADER - GÓC TRÊN BÊN TRÁI -->
+    <div class="watch-subnav">
+      <a href="index.html" class="btn-back-home">
+        <span class="back-icon-circle">
+          <i class="ri-arrow-left-line"></i>
+        </span>
+        <span>Quay lại Trang Chủ</span>
+      </a>
+
+      <div class="breadcrumb">
+        <i class="ri-Clapperboard-line"></i>
+        <span>Đang xem:</span>
+        <span id="breadcrumb-title" class="current">Đang tải phim...</span>
+      </div>
     </div>
 
     <!-- 1. KHUNG TRÌNH PHÁT PHIM (IFRAME EMBED NGUONC) -->
     <section class="player-wrapper">
       <div class="video-responsive" id="video-container">
         <div class="player-placeholder" id="player-placeholder">
-          <span>🎬 Đang kết nối máy chủ phát phim từ NguonC...</span>
+          <i class="ri-loader-4-line spin-icon"></i>
+          <span>Đang kết nối máy chủ phát phim từ NguonC...</span>
         </div>
         <iframe
           id="movie-iframe"
@@ -59,14 +81,24 @@
 
       <div class="player-toolbar">
         <div class="now-playing-label">
+          <i class="ri-play-circle-line" style="color: var(--primary); font-size: 1.15rem;"></i>
           <span>Đang phát:</span>
           <span id="current-ep-label" class="ep-highlight">Tập 1</span>
         </div>
 
         <div class="player-controls-right">
-          <button type="button" class="btn-tool" id="btn-prev-ep" disabled>⏮ Tập trước</button>
-          <button type="button" class="btn-tool" id="btn-next-ep" disabled>Tập tiếp ⏭</button>
-          <button type="button" class="btn-tool" id="btn-toggle-lights">💡 Tắt đèn</button>
+          <button type="button" class="btn-tool" id="btn-prev-ep" disabled>
+            <i class="ri-skip-back-line"></i>
+            <span>Tập trước</span>
+          </button>
+          <button type="button" class="btn-tool" id="btn-next-ep" disabled>
+            <span>Tập tiếp</span>
+            <i class="ri-skip-forward-line"></i>
+          </button>
+          <button type="button" class="btn-tool" id="btn-toggle-lights">
+            <i class="ri-lightbulb-flash-line"></i>
+            <span>Tắt đèn</span>
+          </button>
         </div>
       </div>
     </section>
@@ -74,7 +106,7 @@
     <!-- 2. CHỌN SERVER & DANH SÁCH TẬP -->
     <section class="episodes-box">
       <div class="server-tabs" id="server-tabs">
-        <span class="server-label">🖧 Chọn Server:</span>
+        <span class="server-label"><i class="ri-base-station-line"></i> Chọn Server:</span>
       </div>
 
       <div class="episode-list-grid" id="episode-list">
@@ -89,7 +121,7 @@
       <section class="movie-detail-card" id="movie-detail-card">
         <img
           id="detail-poster"
-          src="https://placehold.co/300x450/161d2f/e50914?text=Loading"
+          src="https://placehold.co/300x450/0f1b33/7dd3fc?text=Loading"
           alt="Poster"
           class="detail-poster"
         />
@@ -115,11 +147,12 @@
         <div class="comments-header">
           <h2>
             <span class="live-dot"></span>
-            Bình Luận Real-time (<span id="comment-count">0</span>)
+            <i class="ri-chat-3-line" style="color: var(--primary);"></i>
+            <span>Bình Luận Real-time (<span id="comment-count">0</span>)</span>
           </h2>
         </div>
 
-        <!-- Khu vực nhập bình luận (Thay đổi tùy theo trạng thái Đăng nhập) -->
+        <!-- Khu vực nhập bình luận -->
         <div id="comment-auth-container"></div>
 
         <!-- Danh sách bình luận tự động nhảy theo thời gian thực -->
@@ -132,9 +165,110 @@
 
   </main>
 
-  <footer class="site-footer">
+  <!-- ==================== LUXURY WORLD-CLASS FOOTER ==================== -->
+   <footer class="site-footer">
+    <div class="footer-glow-line"></div>
     <div class="container">
-      <p>© 2026 <strong>WebPhimTest</strong> — Chạy trên nền tảng API NguonC & Firebase Realtime.</p>
+      <div class="footer-grid">
+        <!-- Cột 1: Thương hiệu Biển Phim Hay -->
+        <div class="footer-col brand-col">
+          <a href="index.html" class="brand-logo">
+            <span class="brand-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+              </svg>
+            </span>
+            <div class="brand-wordmark">
+              <span class="brand-text">BIỂN <span class="highlight">PHIM HAY</span></span>
+              <span class="brand-sub">OCEAN CINEMA HD</span>
+            </div>
+          </a>
+          <p class="footer-desc">
+            Nền tảng thưởng thức điện ảnh trực tuyến thế hệ mới với giao diện đẹp mắt, thân thiện với người dùng.
+          </p>
+          <p class="footer-desc">
+            <strong>Biển Phim,</strong> Phim hay cả biển
+
+          </p>
+          <div class="server-status-pill">
+            <span class="status-dot"></span>
+            <span>Hệ thống xem phim hiện đại, ổn định.</span>
+          </div>
+        </div>
+
+        <!-- Cột 2: Danh mục khám phá -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Danh Mục Phim</h4>
+          <ul class="footer-links">
+            <li><a href="index.html"><i class="ri-compass-3-line"></i> Phim Mới Cập Nhật</a></li>
+            <li><a href="index.html"><i class="ri-tv-2-line"></i> Tuyển Tập Phim Bộ</a></li>
+            <li><a href="index.html"><i class="ri-film-line"></i> Phim Lẻ Điện Ảnh</a></li>
+            <li><a href="index.html"><i class="ri-Mickey-line"></i> Hoạt Hình & Anime</a></li>
+            <li><a href="index.html"><i class="ri-Vip-crown-2-line"></i> Top 10 Thịnh Hành</a></li>
+          </ul>
+        </div>
+
+        <!-- Cột 3: Tiện ích người dùng -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Trải Nghiệm</h4>
+          <ul class="footer-links">
+            <li><a href="profile.html"><i class="ri-user-smile-line"></i> Hồ Sơ & Đổi Avatar</a></li>
+            <li><a href="profile.html"><i class="ri-history-line"></i> Lịch Sử Xem Phim</a></li>
+            <li><a href="index.html"><i class="ri-chat-smile-3-line"></i> Bình Luận Real-time</a></li>
+            <li><a href="admin.html"><i class="ri-shield-star-line"></i> Trung Tâm Quản Trị</a></li>
+          </ul>
+        </div>
+
+        <!-- Cột 4: Liên hệ Quản trị viên (Facebook, Discord, Email) -->
+        <div class="footer-col contact-col">
+          <h4 class="footer-heading">Contact For More</h4>
+          <p class="contact-sub">Hỗ trợ kỹ thuật, góp ý tính năng hoặc báo lỗi tập phim trực tiếp với Admin:</p>
+
+          <div class="admin-contact-cards">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-contact-card fb">
+              <div class="social-icon-box">
+                <i class="ri-facebook-circle-fill"></i>
+              </div>
+              <div class="social-meta">
+                <span class="social-label">Facebook Admin</span>
+                <strong>Biển Phim Hay Official</strong>
+              </div>
+              <i class="ri-arrow-right-up-line external-arrow"></i>
+            </a>
+
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="social-contact-card discord">
+              <div class="social-icon-box">
+                <i class="ri-discord-fill"></i>
+              </div>
+              <div class="social-meta">
+                <span class="social-label">Group Discord</span>
+                <strong>Biển Phim</strong>
+              </div>
+              <i class="ri-arrow-right-up-line external-arrow"></i>
+            </a>
+
+            <a href="mailto:liemtrumscam@gmail.com" class="social-contact-card email">
+              <div class="social-icon-box">
+                <i class="ri-mail-send-fill"></i>
+              </div>
+              <div class="social-meta">
+                <span class="social-label">Email Admin</span>
+                <strong>Click To Send</strong>
+              </div>
+              <i class="ri-arrow-right-up-line external-arrow"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 <strong>Biển Phim Hay</strong>. Kho phim điện ảnh miễn phí chất lượng cao</p>
+        <div class="footer-bottom-badges">
+          <span><i class="ri-hd-line"></i> Full HD 1080p</span>
+          <span><i class="ri-flashlight-line"></i> Speed Connect</span>
+          <span><i class="ri-shield-check-line"></i> Admin Verified</span>
+        </div>
+      </div>
     </div>
   </footer>
 
