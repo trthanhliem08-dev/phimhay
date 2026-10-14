@@ -25,7 +25,9 @@ import {
   toggleBanUserByAdmin,
   updateUserRankByAdmin,
   publishGlobalBroadcast,
-  stopGlobalBroadcast
+  stopGlobalBroadcast,
+  enableMaintenanceByAdmin,
+  disableMaintenanceByAdmin
 } from "../services/comment.js";
 import {
   escapeHtml,
@@ -94,6 +96,18 @@ document.addEventListener("DOMContentLoaded", () => {
     await stopGlobalBroadcast();
   });
 
+  // Form Bật / Tắt Chế độ Bảo trì toàn web
+  document.getElementById("admin-maint-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const hours = document.getElementById("input-maint-hours")?.value;
+    const reason = document.getElementById("input-maint-reason")?.value;
+    await enableMaintenanceByAdmin(hours, reason);
+  });
+
+  document.getElementById("btn-maint-off")?.addEventListener("click", async () => {
+    await disableMaintenanceByAdmin();
+  });
+
   document.getElementById("search-comments-admin")?.addEventListener("input", (e) => {
     commentKeyword = e.target.value.trim().toLowerCase();
     renderAdminComments();
@@ -130,7 +144,7 @@ function startAdminRealtimeListeners() {
   onSnapshot(collection(db, "users"), (snapshot) => {
     const list = [];
     snapshot.forEach((docSnap) => {
-      if (docSnap.id === "GLOBAL_BROADCAST_CONFIG" || docSnap.data()?.isBroadcastDoc) return;
+      if (docSnap.id === "GLOBAL_BROADCAST_CONFIG" || docSnap.id === "GLOBAL_MAINTENANCE_CONFIG" || docSnap.data()?.isBroadcastDoc) return;
       list.push({ id: docSnap.id, ...docSnap.data() });
     });
     allUsers = list;
@@ -138,6 +152,21 @@ function startAdminRealtimeListeners() {
     document.getElementById("stat-total-users").textContent = allUsers.length;
     document.getElementById("stat-banned-users").textContent = bannedCount;
     renderAdminUsers();
+  });
+
+  // 2b. Lắng nghe trạng thái Bảo trì toàn web
+  onSnapshot(doc(db, "users", "GLOBAL_MAINTENANCE_CONFIG"), (docSnap) => {
+    const badge = document.getElementById("admin-maint-status");
+    if (!badge) return;
+    const data = docSnap.exists() ? docSnap.data() : null;
+    if (data && data.active && Number(data.endTimeMs || 0) > Date.now()) {
+      const endStr = new Date(Number(data.endTimeMs)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      badge.className = "broadcast-status-badge pinned";
+      badge.innerHTML = `<i class="ri-lock-fill"></i> Đang Bảo Trì (Mở lại lúc ${endStr})`;
+    } else {
+      badge.className = "broadcast-status-badge live";
+      badge.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Web đang Mở bình thường`;
+    }
   });
 
   // 3. Lắng nghe trạng thái thông báo toàn server (Phân biệt Vĩnh viễn & 60s)

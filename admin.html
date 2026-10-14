@@ -83,6 +83,44 @@
       </form>
     </section>
 
+        <!-- TRẠM BẬT / TẮT BẢO TRÌ TOÀN WEB & ĐỒNG HỒ ĐẾM NGƯỢC -->
+    <section class="broadcast-control-card" style="border-color: rgba(253, 230, 138, 0.4);">
+      <div class="broadcast-card-header">
+        <div>
+          <h2 style="color: #fde68a;"><i class="ri-tools-fill"></i> Chế Độ Bảo Trì Toàn Web & Hẹn Giờ Đếm Ngược</h2>
+          <p>Khi bật, toàn bộ người xem sẽ tự động được chuyển sang trang <strong>maintenance.html</strong> với đồng hồ đếm ngược cố định (bấm F5 không bị reset). Bạn cũng có thể chỉnh tay trong file <code>js/config/maintenance-config.js</code>.</p>
+        </div>
+        <span id="admin-maint-status" class="broadcast-status-badge">Web đang Mở bình thường</span>
+      </div>
+
+      <form id="admin-maint-form" class="broadcast-form-row">
+        <input
+          type="number"
+          id="input-maint-hours"
+          class="broadcast-input"
+          style="max-width: 190px;"
+          step="0.1"
+          min="0.1"
+          max="720"
+          placeholder="Số tiếng (VD: 2)"
+          required
+        />
+        <input
+          type="text"
+          id="input-maint-reason"
+          class="broadcast-input"
+          placeholder="Lý do bảo trì (VD: Nâng cấp máy chủ chiếu phim, hoàn tất sau ít phút)..."
+          maxlength="240"
+        />
+        <button type="submit" class="btn-broadcast-permanent">
+          <i class="ri-lock-password-fill"></i> Bật Bảo Trì Ngay
+        </button>
+        <button type="button" id="btn-maint-off" class="btn-broadcast-stop">
+          <i class="ri-lock-unlock-line"></i> Mở Khóa Web
+        </button>
+      </form>
+    </section>
+
     <!-- Thống kê nhanh -->
     <section class="stats-grid">
       <div class="stat-card">

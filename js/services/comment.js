@@ -251,3 +251,46 @@ export async function stopGlobalBroadcast() {
     showToast("Không thể tắt thông báo: " + (error.code || error.message), "error");
   }
 }
+
+/**
+ * Admin bật chế độ Bảo trì toàn web theo số giờ (Ví dụ: 2 giờ, 0.5 giờ)
+ * Lưu mốc thời gian đích cố định `endTimeMs = Date.now() + hours * 3600000`
+ * giúp đồng hồ ở máy Viewer không bao giờ bị reset khi bấm F5!
+ */
+export async function enableMaintenanceByAdmin(hoursInput, reasonText) {
+  const hours = parseFloat(hoursInput);
+  if (isNaN(hours) || hours <= 0) {
+    showToast("Số giờ bảo trì phải lớn hơn 0!", "error");
+    return;
+  }
+
+  const now = Date.now();
+  const endTimeMs = Math.round(now + hours * 3600 * 1000);
+  const cleanReason =
+    (reasonText || "").trim() ||
+    "Biển Phim Hay đang nâng cấp máy chủ và cập nhật kho phim mới. Hẹn gặp lại bạn sau ít phút!";
+
+  await setDoc(doc(db, "users", "GLOBAL_MAINTENANCE_CONFIG"), {
+    isBroadcastDoc: true,
+    active: true,
+    hours: hours,
+    startedAtMs: now,
+    endTimeMs: endTimeMs,
+    reason: cleanReason,
+    updatedAt: serverTimestamp()
+  });
+
+  showToast(`🛠️ Đã BẬT Bảo trì toàn web trong ${hours} giờ!`, "success");
+}
+
+/**
+ * Admin tắt chế độ Bảo trì sớm, mở khóa web ngay lập tức
+ */
+export async function disableMaintenanceByAdmin() {
+  await setDoc(
+    doc(db, "users", "GLOBAL_MAINTENANCE_CONFIG"),
+    { isBroadcastDoc: true, active: false, endTimeMs: 0 },
+    { merge: true }
+  );
+  showToast("✅ Đã TẮT Bảo trì! Người xem có thể truy cập web bình thường.", "info");
+}

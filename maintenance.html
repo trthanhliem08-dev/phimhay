@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đang Bảo Trì Hệ Thống — Biển Phim Hay</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    .maint-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .maint-card {
+      max-width: 720px;
+      width: 100%;
+      background: rgba(11, 20, 38, 0.85);
+      backdrop-filter: blur(22px);
+      border: 1px solid rgba(125, 211, 252, 0.35);
+      border-radius: 28px;
+      padding: 46px 38px;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(2, 6, 23, 0.85), 0 0 45px rgba(56, 189, 248, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .maint-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #7dd3fc, #818cf8, transparent);
+      box-shadow: 0 0 20px #7dd3fc;
+    }
+
+    .maint-gear-box {
+      width: 78px;
+      height: 78px;
+      margin: 0 auto 20px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.2), rgba(129, 140, 248, 0.22));
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.3rem;
+      color: var(--primary);
+      box-shadow: 0 0 28px rgba(125, 211, 252, 0.35);
+    }
+
+    .maint-gear-box i {
+      animation: slowSpin 8s linear infinite;
+    }
+
+    @keyframes slowSpin {
+      100% { transform: rotate(360deg); }
+    }
+
+    .maint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(253, 230, 138, 0.14);
+      border: 1px solid rgba(253, 230, 138, 0.45);
+      color: #fde68a;
+      font-size: 0.76rem;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      letter-spacing: 1px;
+    }
+
+    .maint-title {
+      font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .maint-desc {
+      color: #cbd5e1;
+      font-size: 0.96rem;
+      line-height: 1.65;
+      max-width: 560px;
+      margin: 0 auto 30px;
+    }
+
+    /* Đồng hồ đếm ngược 4 ô Kỹ thuật số */
+    .countdown-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      max-width: 520px;
+      margin: 0 auto 28px;
+    }
+
+    .countdown-box {
+      background: rgba(6, 11, 22, 0.9);
+      border: 1px solid rgba(125, 211, 252, 0.3);
+      border-radius: 16px;
+      padding: 18px 10px;
+      box-shadow: inset 0 0 20px rgba(125, 211, 252, 0.08), 0 8px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    .cd-number {
+      font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1.1;
+      text-shadow: 0 0 18px rgba(125, 211, 252, 0.55);
+    }
+
+    .cd-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    .maint-target-time {
+      font-size: 0.85rem;
+      color: var(--accent-aqua);
+      font-weight: 700;
+      margin-bottom: 26px;
+    }
+
+    .maint-contact-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-top: 22px;
+      border-top: 1px solid rgba(125, 211, 252, 0.14);
+    }
+
+    .maint-social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(16, 29, 54, 0.85);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .maint-social-btn i {
+      color: var(--primary);
+      font-size: 1.05rem;
+    }
+
+    .maint-social-btn:hover {
+      border-color: var(--primary);
+      background: rgba(125, 211, 252, 0.16);
+      transform: translateY(-2px);
+    }
+
+    .admin-quick-link {
+      margin-top: 18px;
+      display: inline-block;
+      font-size: 0.76rem;
+      color: #64748b;
+      transition: color 0.2s;
+    }
+
+    .admin-quick-link:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 540px) {
+      .maint-card {
+        padding: 32px 20px;
+      }
+      .countdown-grid {
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HIỆU ỨNG ÁNH SÁNG NỀN AURORA -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="aurora-orb orb-1"></div>
+    <div class="aurora-orb orb-2"></div>
+    <div class="aurora-orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <main class="maint-wrapper">
+    <div class="maint-card">
+      <div class="maint-gear-box">
+        <i class="ri-settings-5-fill"></i>
+      </div>
+
+      <span class="maint-badge">
+        <span class="live-ping"></span> BIỂN PHIM HAY • SYSTEM UPGRADE
+      </span>
+
+      <h1 id="maint-title" class="maint-title">Hệ Thống Đang Bảo Trì & Nâng Cấp</h1>
+      <p id="maint-desc" class="maint-desc">
+        Biển Phim Hay đang tiến hành nâng cấp máy chủ và cập nhật thêm kho phim Full HD mới để mang lại trải nghiệm mượt mà nhất. Vui lòng quay lại khi đồng hồ đếm ngược kết thúc!
+      </p>
+
+      <!-- ĐỒNG HỒ ĐẾM NGƯỢC (KHÔNG BAO GIỜ BỊ RESET KHI BẤM F5) -->
+      <div class="countdown-grid">
+        <div class="countdown-box">
+          <div id="cd-days" class="cd-number">00</div>
+          <div class="cd-label">Ngày</div>
+        </div>
+        <div class="countdown-box">
+          <div id="cd-hours" class="cd-number">00</div>
+          <div class="cd-label">Giờ</div>
+        </div>
+        <div class="countdown-box">
+          <div id="cd-minutes" class="cd-number">00</div>
+          <div class="cd-label">Phút</div>
+        </div>
+        <div class="countdown-box">
+          <div id="cd-seconds" class="cd-number">00</div>
+          <div class="cd-label">Giây</div>
+        </div>
+      </div>
+
+      <div id="maint-target-label" class="maint-target-time">
+        <i class="ri-time-line"></i> Dự kiến hoàn tất: Đang đồng bộ thời gian...
+      </div>
+
+      <div class="maint-contact-row">
+        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="maint-social-btn">
+          <i class="ri-facebook-circle-fill"></i> Facebook Admin
+        </a>
+        <a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="maint-social-btn">
+          <i class="ri-discord-fill"></i> Cộng đồng Discord
+        </a>
+        <a href="mailto:liemtran.238460@gmail.com" class="maint-social-btn">
+          <i class="ri-mail-send-fill"></i> liemtran.238460@gmail.com
+        </a>
+      </div>
+
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { db, doc, onSnapshot } from "./js/config/firebase-config.js";
+    import { MAINTENANCE_CONFIG } from "./js/config/maintenance-config.js";
+
+    let targetEndMs = 0;
+    let countdownTimer = null;
+
+    function pad2(n) {
+      return String(Math.max(0, Math.floor(n))).padStart(2, "0");
+    }
+
+    function startCountdown(endMs, reasonText) {
+      targetEndMs = Number(endMs || 0);
+      if (reasonText) {
+        document.getElementById("maint-desc").textContent = reasonText;
+      }
+
+      const targetLabel = document.getElementById("maint-target-label");
+      if (targetEndMs > 0 && targetLabel) {
+        const endDate = new Date(targetEndMs);
+        targetLabel.innerHTML = `<i class="ri-calendar-check-line"></i> Dự kiến mở lại lúc: <strong>${endDate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} - ${endDate.toLocaleDateString("vi-VN")}</strong>`;
+      }
+
+      clearInterval(countdownTimer);
+      updateTick();
+      countdownTimer = setInterval(updateTick, 1000);
+    }
+
+    function updateTick() {
+      const now = Date.now();
+      const diffMs = targetEndMs - now;
+
+      // Khi hết giờ bảo trì -> Tự động đưa người xem về lại Trang chủ!
+      if (diffMs <= 0) {
+        clearInterval(countdownTimer);
+        document.getElementById("cd-days").textContent = "00";
+        document.getElementById("cd-hours").textContent = "00";
+        document.getElementById("cd-minutes").textContent = "00";
+        document.getElementById("cd-seconds").textContent = "00";
+        window.location.replace("index.html");
+        return;
+      }
+
+      const totalSec = Math.floor(diffMs / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+
+      document.getElementById("cd-days").textContent = pad2(days);
+      document.getElementById("cd-hours").textContent = pad2(hours);
+      document.getElementById("cd-minutes").textContent = pad2(minutes);
+      document.getElementById("cd-seconds").textContent = pad2(seconds);
+    }
+
+    // 1. Kiểm tra file cấu hình cứng js/config/maintenance-config.js trước
+    const fileEndMs = Date.parse(MAINTENANCE_CONFIG.endTime || "");
+    if (MAINTENANCE_CONFIG.enabled && fileEndMs > Date.now()) {
+      startCountdown(fileEndMs, MAINTENANCE_CONFIG.message);
+    }
+
+    // 2. Đồng thời lắng nghe cấu hình Bảo trì Real-time từ Admin trên Firebase
+    onSnapshot(doc(db, "users", "GLOBAL_MAINTENANCE_CONFIG"), (docSnap) => {
+      const data = docSnap.exists() ? docSnap.data() : null;
+      const fbActive = data && data.active && Number(data.endTimeMs || 0) > Date.now();
+
+      if (fbActive) {
+        startCountdown(Number(data.endTimeMs), data.reason || MAINTENANCE_CONFIG.message);
+      } else if (!MAINTENANCE_CONFIG.enabled || fileEndMs <= Date.now()) {
+        // Nếu cả file config lẫn Firebase đều đã tắt bảo trì -> Tự động quay về Trang chủ!
+        window.location.replace("index.html");
+      }
+    });
+  </script>
+</body>
+</html>

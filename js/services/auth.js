@@ -23,6 +23,7 @@ import {
   serverTimestamp
 } from "../config/firebase-config.js";
 import { showToast, DEFAULT_AVATARS, escapeHtml } from "../utils/helpers.js";
+import { MAINTENANCE_CONFIG } from "../config/maintenance-config.js";
 
 let currentUserProfile = undefined;
 let isAuthReady = false;
@@ -467,8 +468,49 @@ function hideBroadcastBar() {
 /**
  * Khởi chạy lắng nghe trạng thái đăng nhập + Lắng nghe thông báo toàn server
  */
+// ============================================================================
+// HỆ THỐNG KIỂM TRA BẢO TRÌ & TỰ ĐỘNG CHUYỂN HƯỚNG SANG MAINTENANCE.HTML
+// ============================================================================
+let maintenanceGuardStarted = false;
+
+function initMaintenanceGuard() {
+  if (maintenanceGuardStarted) return;
+  maintenanceGuardStarted = true;
+
+  const currentPath = window.location.pathname.toLowerCase();
+  // Không chặn nếu đang ở trang admin.html hoặc đã ở sẵn trang maintenance.html
+  if (currentPath.endsWith("admin.html") || currentPath.endsWith("maintenance.html")) {
+    return;
+  }
+
+  // 1. Kiểm tra ngay trong file js/config/maintenance-config.js (Nếu bạn sửa false -> true)
+  const fileEndMs = Date.parse(MAINTENANCE_CONFIG.endTime || "");
+  if (MAINTENANCE_CONFIG.enabled && fileEndMs > Date.now()) {
+    window.location.replace("maintenance.html");
+    return;
+  }
+
+  // 2. Lắng nghe lệnh Bật Bảo Trì Real-time từ trang Admin trên Firebase
+  onSnapshot(
+    doc(db, "users", "GLOBAL_MAINTENANCE_CONFIG"),
+    (docSnap) => {
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+      if (data && data.active && Number(data.endTimeMs || 0) > Date.now()) {
+        // Nếu người đang xem không phải Admin đang mở trang quản trị thì chuyển ngay qua maintenance.html
+        window.location.replace("maintenance.html");
+      }
+    },
+    (err) => {
+      console.warn("Không thể kiểm tra trạng thái bảo trì:", err);
+    }
+  );
+}
+
 export function initHeaderAuthUI() {
-  // Bật lắng nghe thông báo chạy chữ dưới Header cho TẤT CẢ người đang mở web
+  // 1. Kiểm tra chế độ bảo trì toàn web
+  initMaintenanceGuard();
+  // 2. Bật lắng nghe thông báo chạy chữ dưới Header
   initGlobalBroadcastListener();
 
   onAuthStateChanged(auth, async (firebaseUser) => {
