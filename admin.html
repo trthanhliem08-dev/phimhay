@@ -48,7 +48,7 @@
     <section class="admin-banner">
       <div>
         <h1><i class="ri-shield-star-fill" style="color: #fde68a;"></i> Trung Tâm Quản Trị Biển Phim Hay</h1>
-        <p>Xin chào <strong id="admin-email-label">liemtran.238460@gmail.com</strong> — Mọi phân quyền & thông báo đồng bộ Real-time.</p>
+        <p>Xin chào Quản trị viên tối cao <strong id="admin-email-label">liemtran.238460@gmail.com</strong> — Mọi phân quyền & thông báo đồng bộ Real-time.</p>
       </div>
     </section>
 
@@ -56,8 +56,8 @@
     <section class="broadcast-control-card">
       <div class="broadcast-card-header">
         <div>
-          <h2><i class="ri-megaphone-fill"></i> Phát Thông Báo Chạy Chữ Toàn Server (Hiển thị 1 Phút)</h2>
-          <p>Dòng thông báo sẽ lập tức xuất hiện ngay dưới thanh Header của tất cả người đang xem trên web và tự động lặp lại liên tục trong đúng 60 giây.</p>
+          <h2><i class="ri-megaphone-fill"></i> Trạm Phát Thông Báo Toàn Server (Chế độ 60 Giây & Chế độ Treo Vĩnh Viễn)</h2>
+          <p>Chọn <strong>Phát Nhanh (60s)</strong> để thông báo tự tắt sau 1 phút, hoặc chọn <strong>Treo Vĩnh Viễn</strong> để ghim thông báo bảo trì/sự kiện suốt nhiều ngày cho tới khi bạn bấm <strong>Tắt Ngay</strong>.</p>
         </div>
         <span id="admin-broadcast-status" class="broadcast-status-badge">Đang chờ lệnh</span>
       </div>
@@ -67,14 +67,17 @@
           type="text"
           id="input-broadcast-msg"
           class="broadcast-input"
-          placeholder="Nhập nội dung thông báo toàn server (VD: Chúc anh em xem phim vui vẻ trên Biển Phim Hay!)..."
-          maxlength="220"
+          placeholder="Nhập nội dung thông báo (VD: Web sẽ bảo trì nâng cấp máy chủ lúc 02:00 sáng mai)..."
+          maxlength="240"
           required
         />
-        <button type="submit" class="btn-broadcast-send">
-          <i class="ri-broadcast-fill"></i> Phát Lên Toàn Web (60s)
+        <button type="submit" class="btn-broadcast-send" title="Chạy chữ trong đúng 1 phút rồi tự động tắt">
+          <i class="ri-timer-flash-line"></i> Phát Nhanh (60s)
         </button>
-        <button type="button" id="btn-broadcast-stop" class="btn-broadcast-stop" title="Tắt thông báo ngay lập tức">
+        <button type="button" id="btn-broadcast-permanent" class="btn-broadcast-permanent" title="Treo thông báo chạy liên tục nhiều ngày cho tới khi bạn bấm Tắt Ngay">
+          <i class="ri-pushpin-2-fill"></i> Treo Vĩnh Viễn
+        </button>
+        <button type="button" id="btn-broadcast-stop" class="btn-broadcast-stop" title="Tắt mọi thông báo đang chạy ngay lập tức">
           <i class="ri-stop-circle-line"></i> Tắt Ngay
         </button>
       </form>
@@ -145,4 +148,4 @@
 
   <script type="module" src="./js/pages/admin.js"></script>
 </body>
-</html
+</html>

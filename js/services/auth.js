@@ -287,12 +287,13 @@ function renderAuthModal() {
 }
 
 // ============================================================================
-// HỆ THỐNG THÔNG BÁO TOÀN SERVER CHẠY CHỮ DƯỚI HEADER TRONG 1 PHÚT (60 GIÂY)
+// HỆ THỐNG THÔNG BÁO TOÀN SERVER (HỖ TRỢ CẢ CHẾ ĐỘ 60 GIÂY & TREO VĨNH VIỄN)
 // ============================================================================
 let broadcastHideTimer = null;
 let broadcastCountdownInterval = null;
 let broadcastListenerStarted = false;
 let currentActiveBroadcastId = null;
+let currentActiveMode = null;
 
 function initGlobalBroadcastListener() {
   if (broadcastListenerStarted) return;
@@ -310,21 +311,37 @@ function initGlobalBroadcastListener() {
       const data = docSnap.data();
       if (!data || !data.active || !data.message) {
         currentActiveBroadcastId = null;
+        currentActiveMode = null;
         hideBroadcastBar();
         return;
       }
 
       const broadcastId = data.broadcastId || String(data.createdAtMs || "default");
-      const now = Date.now();
+      const mode = data.mode || "60s";
 
-      // Bỏ qua nếu đây là thông báo cũ từ hơn 10 phút trước mà Admin quên tắt
+      // CHẾ ĐỘ 1: THÔNG BÁO TREO VĨNH VIỄN (BẢO TRÌ / SỰ KIỆN DÀI NGÀY)
+      // Luôn hiển thị cho tất cả mọi người vào web bất kể lúc nào, chỉ tắt khi Admin bấm "Tắt Ngay"
+      if (mode === "permanent") {
+        if (
+          currentActiveBroadcastId === broadcastId &&
+          currentActiveMode === "permanent" &&
+          document.getElementById("global-broadcast-bar")?.classList.contains("active")
+        ) {
+          return;
+        }
+        currentActiveBroadcastId = broadcastId;
+        currentActiveMode = "permanent";
+        showBroadcastBar(data.message, 0, true);
+        return;
+      }
+
+      // CHẾ ĐỘ 2: THÔNG BÁO NHANH 60 GIÂY
+      const now = Date.now();
       if (data.createdAtMs && Math.abs(now - Number(data.createdAtMs)) > 10 * 60 * 1000) {
         hideBroadcastBar();
         return;
       }
 
-      // Lưu thời điểm máy Viewer này bắt đầu nhìn thấy mã broadcastId vào sessionStorage
-      // để nếu Viewer bấm chuyển từ trang chủ sang trang xem phim thì vẫn chạy tiếp mượt mà
       const storageKey = `bph_seen_${broadcastId}`;
       let firstSeenAt = Number(sessionStorage.getItem(storageKey) || 0);
       if (!firstSeenAt) {
@@ -340,13 +357,17 @@ function initGlobalBroadcastListener() {
         return;
       }
 
-      // Nếu đang phát chính thông báo này rồi thì chỉ cập nhật nội dung, không reset lại đồng hồ
-      if (currentActiveBroadcastId === broadcastId && document.getElementById("global-broadcast-bar")?.classList.contains("active")) {
+      if (
+        currentActiveBroadcastId === broadcastId &&
+        currentActiveMode === "60s" &&
+        document.getElementById("global-broadcast-bar")?.classList.contains("active")
+      ) {
         return;
       }
 
       currentActiveBroadcastId = broadcastId;
-      showBroadcastBar(data.message, Math.min(60000, remainingMs));
+      currentActiveMode = "60s";
+      showBroadcastBar(data.message, Math.min(60000, remainingMs), false);
     },
     (err) => {
       console.error("Lỗi lắng nghe thông báo toàn server:", err);
@@ -354,15 +375,13 @@ function initGlobalBroadcastListener() {
   );
 }
 
-function showBroadcastBar(message, durationMs) {
+function showBroadcastBar(message, durationMs, isPermanent = false) {
   let bar = document.getElementById("global-broadcast-bar");
   if (!bar) {
     bar = document.createElement("div");
     bar.id = "global-broadcast-bar";
     bar.className = "global-broadcast-bar";
 
-    // Gắn trực tiếp vào bên dưới cùng của thẻ .site-header để luôn đi theo Header
-    // và KHÔNG BAO GIỜ bị Header che khuất khi Header có 2 dòng!
     const headerEl = document.querySelector(".site-header");
     if (headerEl) {
       headerEl.appendChild(bar);
@@ -372,11 +391,12 @@ function showBroadcastBar(message, durationMs) {
   }
 
   const cleanMsg = escapeHtml(message);
+  const tagLabel = isPermanent ? "THÔNG BÁO QUAN TRỌNG:" : "THÔNG BÁO ADMIN:";
   const repeatedUnits = Array.from({ length: 12 })
     .map(
       () => `
       <span class="broadcast-item">
-        <span class="broadcast-tag"><i class="ri-megaphone-fill"></i> THÔNG BÁO ADMIN:</span>
+        <span class="broadcast-tag"><i class="ri-megaphone-fill"></i> ${tagLabel}</span>
         <span class="broadcast-text">${cleanMsg}</span>
         <span class="broadcast-sep">✦</span>
       </span>
@@ -384,22 +404,29 @@ function showBroadcastBar(message, durationMs) {
     )
     .join("");
 
+  const rightPillHtml = isPermanent
+    ? `<div class="broadcast-timer-pill" style="background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #fde68a;">
+         <i class="ri-pushpin-2-fill"></i>
+         <span>GHIM CỐ ĐỊNH</span>
+       </div>`
+    : `<div class="broadcast-timer-pill" id="broadcast-timer-pill">
+         <i class="ri-timer-flash-line"></i>
+         <span id="broadcast-seconds-left">${Math.ceil(durationMs / 1000)}s</span>
+       </div>`;
+
   bar.innerHTML = `
     <div class="broadcast-inner">
       <div class="broadcast-pinned-label">
         <span class="broadcast-live-dot"></span>
         <i class="ri-volume-up-fill"></i>
-        <span>TOÀN SERVER</span>
+        <span>${isPermanent ? "HỆ THỐNG" : "TOÀN SERVER"}</span>
       </div>
       <div class="broadcast-marquee-viewport">
         <div class="broadcast-marquee-track">
           ${repeatedUnits}
         </div>
       </div>
-      <div class="broadcast-timer-pill" id="broadcast-timer-pill">
-        <i class="ri-timer-flash-line"></i>
-        <span id="broadcast-seconds-left">${Math.ceil(durationMs / 1000)}s</span>
-      </div>
+      ${rightPillHtml}
     </div>
   `;
 
@@ -407,6 +434,11 @@ function showBroadcastBar(message, durationMs) {
 
   clearTimeout(broadcastHideTimer);
   clearInterval(broadcastCountdownInterval);
+
+  // Nếu là thông báo Vĩnh viễn thì KHÔNG đếm ngược và KHÔNG tự đóng
+  if (isPermanent) {
+    return;
+  }
 
   const endTime = Date.now() + durationMs;
   broadcastCountdownInterval = setInterval(() => {

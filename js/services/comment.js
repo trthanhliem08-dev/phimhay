@@ -181,7 +181,12 @@ export async function updateUserRankByAdmin(targetUid, newRankKey) {
  */
 let adminAutoStopTimer = null;
 
-export async function publishGlobalBroadcast(messageText) {
+/**
+ * Phát thông báo toàn Server:
+ * @param {string} messageText - Nội dung thông báo
+ * @param {boolean} isPermanent - true: Treo vĩnh viễn tới khi bấm Tắt | false: Chạy đúng 60 giây rồi tự tắt
+ */
+export async function publishGlobalBroadcast(messageText, isPermanent = false) {
   const clean = (messageText || "").trim();
   if (!clean) {
     showToast("Vui lòng nhập nội dung thông báo!", "error");
@@ -189,35 +194,39 @@ export async function publishGlobalBroadcast(messageText) {
   }
 
   try {
+    clearTimeout(adminAutoStopTimer);
     const now = Date.now();
     const broadcastId = `bc_${now}`;
 
-    // Lưu vào bảng `users` (cùng bảng với tính năng Phân cấp danh hiệu đã chạy ngon lành)
     await setDoc(doc(db, "users", "GLOBAL_BROADCAST_CONFIG"), {
       isBroadcastDoc: true,
       message: clean,
       active: true,
+      mode: isPermanent ? "permanent" : "60s",
       createdAtMs: now,
-      expiresAtMs: now + 60 * 1000,
+      expiresAtMs: isPermanent ? 0 : now + 60 * 1000,
       broadcastId: broadcastId,
       updatedAt: serverTimestamp()
     });
 
-    showToast("Đã phát thông báo chạy chữ lên toàn Server trong 60 giây!", "success");
+    if (isPermanent) {
+      showToast("📌 Đã ghim thông báo VĨNH VIỄN trên toàn web (Chỉ tắt khi bạn bấm Tắt Ngay)!", "success");
+    } else {
+      showToast("⏱️ Đã phát thông báo chạy chữ lên toàn Server trong 60 giây!", "success");
 
-    // Tự động chuyển active = false trên Firestore sau 60 giây
-    clearTimeout(adminAutoStopTimer);
-    adminAutoStopTimer = setTimeout(async () => {
-      try {
-        await setDoc(
-          doc(db, "users", "GLOBAL_BROADCAST_CONFIG"),
-          { isBroadcastDoc: true, active: false },
-          { merge: true }
-        );
-      } catch (e) {
-        console.warn("Không thể tự đóng cờ broadcast:", e);
-      }
-    }, 60500);
+      // Chỉ tự động tắt sau 60s nếu là chế độ 60 giây
+      adminAutoStopTimer = setTimeout(async () => {
+        try {
+          await setDoc(
+            doc(db, "users", "GLOBAL_BROADCAST_CONFIG"),
+            { isBroadcastDoc: true, active: false },
+            { merge: true }
+          );
+        } catch (e) {
+          console.warn("Không thể tự đóng cờ broadcast:", e);
+        }
+      }, 60500);
+    }
   } catch (error) {
     console.error("Lỗi khi phát thông báo toàn server:", error);
     showToast("Lỗi quyền Firestore khi phát thông báo: " + (error.code || error.message), "error");
@@ -226,17 +235,17 @@ export async function publishGlobalBroadcast(messageText) {
 }
 
 /**
- * Admin tắt sớm thông báo toàn Server
+ * Admin tắt thông báo toàn Server (Tắt được cả thông báo 60s lẫn thông báo Vĩnh viễn)
  */
 export async function stopGlobalBroadcast() {
   clearTimeout(adminAutoStopTimer);
   try {
     await setDoc(
       doc(db, "users", "GLOBAL_BROADCAST_CONFIG"),
-      { isBroadcastDoc: true, active: false, expiresAtMs: 0 },
+      { isBroadcastDoc: true, active: false, mode: "off", expiresAtMs: 0 },
       { merge: true }
     );
-    showToast("Đã dừng phát thông báo toàn Server.", "info");
+    showToast("Đã tắt thông báo toàn Server.", "info");
   } catch (error) {
     console.error("Lỗi tắt thông báo:", error);
     showToast("Không thể tắt thông báo: " + (error.code || error.message), "error");

@@ -69,12 +69,24 @@ document.addEventListener("DOMContentLoaded", () => {
     startAdminRealtimeListeners();
   });
 
-  // Form phát thông báo toàn server 60 giây
+  // Nút 1: Phát thông báo nhanh 60 giây (Submit form)
   const broadcastForm = document.getElementById("admin-broadcast-form");
   const broadcastInput = document.getElementById("input-broadcast-msg");
   broadcastForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    await publishGlobalBroadcast(broadcastInput.value);
+    await publishGlobalBroadcast(broadcastInput.value, false);
+    broadcastInput.value = "";
+  });
+
+  // Nút 2: Treo thông báo Vĩnh Viễn tới khi bấm Tắt Ngay
+  document.getElementById("btn-broadcast-permanent")?.addEventListener("click", async () => {
+    const val = broadcastInput?.value || "";
+    if (!val.trim()) {
+      showToast("Vui lòng nhập nội dung thông báo trước khi bấm Treo Vĩnh Viễn!", "error");
+      broadcastInput?.focus();
+      return;
+    }
+    await publishGlobalBroadcast(val, true);
     broadcastInput.value = "";
   });
 
@@ -128,14 +140,17 @@ function startAdminRealtimeListeners() {
     renderAdminUsers();
   });
 
-  // 3. Lắng nghe trạng thái thông báo toàn server
+  // 3. Lắng nghe trạng thái thông báo toàn server (Phân biệt Vĩnh viễn & 60s)
   onSnapshot(doc(db, "users", "GLOBAL_BROADCAST_CONFIG"), (docSnap) => {
     const badge = document.getElementById("admin-broadcast-status");
     if (!badge) return;
     const data = docSnap.exists() ? docSnap.data() : null;
-    if (data && data.active && Number(data.expiresAtMs || 0) > Date.now()) {
+    if (data && data.active && data.mode === "permanent") {
+      badge.className = "broadcast-status-badge pinned";
+      badge.innerHTML = `<i class="ri-pushpin-2-fill"></i> Đang treo Vĩnh Viễn trên toàn web`;
+    } else if (data && data.active && Number(data.expiresAtMs || 0) > Date.now()) {
       badge.className = "broadcast-status-badge live";
-      badge.innerHTML = `<i class="ri-Checkbox-blank-circle-fill"></i> Đang phát trên toàn web`;
+      badge.innerHTML = `<i class="ri-timer-flash-line"></i> Đang phát 60s trên toàn web`;
     } else {
       badge.className = "broadcast-status-badge";
       badge.textContent = "Đang chờ lệnh";
