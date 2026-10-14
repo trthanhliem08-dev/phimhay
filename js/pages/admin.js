@@ -1,10 +1,10 @@
 // ============================================================================
 // FILE: js/pages/admin.js
 // MỤC ĐÍCH: Điều khiển trang Quản trị viên (admin.html):
-//           - Kiểm tra chặt chẽ email `liemtran.238460@gmail.com`, nếu không phải
-//             sẽ từ chối truy cập ngay lập tức
-//           - Lắng nghe Real-time toàn bộ bảng `comments` và `users`
-//           - Cho phép xóa bình luận, chặn/mở chặn người dùng và đặt lại Avatar vi phạm
+//           - Kiểm tra chặt chẽ email `liemtran.238460@gmail.com`
+//           - Phát thông báo chạy chữ toàn Server trong 1 phút (60 giây)
+//           - Phân cấp Danh hiệu (Người Mới / Mọt Phim / Thánh Cày Phim) cho thành viên
+//           - Xóa bình luận, chặn/mở chặn người dùng & đặt lại Avatar
 // ============================================================================
 
 import {
@@ -22,13 +22,17 @@ import {
 } from "../services/auth.js";
 import {
   deleteMovieComment,
-  toggleBanUserByAdmin
+  toggleBanUserByAdmin,
+  updateUserRankByAdmin,
+  publishGlobalBroadcast,
+  stopGlobalBroadcast
 } from "../services/comment.js";
 import {
   escapeHtml,
   timeAgo,
   showToast,
-  DEFAULT_AVATARS
+  DEFAULT_AVATARS,
+  renderUserBadgeHtml
 } from "../utils/helpers.js";
 
 let allComments = [];
@@ -58,12 +62,24 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Hợp lệ: Mở khóa giao diện Admin
     if (deniedBox) deniedBox.style.display = "none";
     if (adminRoot) adminRoot.style.display = "block";
     document.getElementById("admin-email-label").textContent = profile.email;
 
     startAdminRealtimeListeners();
+  });
+
+  // Form phát thông báo toàn server 60 giây
+  const broadcastForm = document.getElementById("admin-broadcast-form");
+  const broadcastInput = document.getElementById("input-broadcast-msg");
+  broadcastForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await publishGlobalBroadcast(broadcastInput.value);
+    broadcastInput.value = "";
+  });
+
+  document.getElementById("btn-broadcast-stop")?.addEventListener("click", async () => {
+    await stopGlobalBroadcast();
   });
 
   document.getElementById("search-comments-admin")?.addEventListener("input", (e) => {
@@ -110,6 +126,20 @@ function startAdminRealtimeListeners() {
     document.getElementById("stat-banned-users").textContent = bannedCount;
     renderAdminUsers();
   });
+
+  // 3. Lắng nghe trạng thái thông báo toàn server
+  onSnapshot(doc(db, "settings", "broadcast"), (docSnap) => {
+    const badge = document.getElementById("admin-broadcast-status");
+    if (!badge) return;
+    const data = docSnap.exists() ? docSnap.data() : null;
+    if (data && data.active && Number(data.expiresAtMs || 0) > Date.now()) {
+      badge.className = "broadcast-status-badge live";
+      badge.innerHTML = `<i class="ri-Checkbox-blank-circle-fill"></i> Đang phát trên toàn web`;
+    } else {
+      badge.className = "broadcast-status-badge";
+      badge.textContent = "Đang chờ lệnh";
+    }
+  });
 }
 
 function renderAdminComments() {
@@ -143,6 +173,7 @@ function renderAdminComments() {
           <div class="admin-item-info">
             <h4>
               ${escapeHtml(c.userName || "Thành viên")}
+              ${renderUserBadgeHtml(c.userRole, c.userRank)}
               <span style="font-weight: 400; font-size: 0.75rem; color: var(--text-muted);">
                 (${escapeHtml(c.userEmail || "Ẩn email")})
               </span>
@@ -150,18 +181,18 @@ function renderAdminComments() {
             <div class="sub-meta">${timeAgo(c.createdAt || c.clientTime)}</div>
             <div class="cmt-content">${escapeHtml(c.content)}</div>
             <a href="watch.html?slug=${encodeURIComponent(c.movieSlug)}" class="movie-link-tag">
-              🎬 Phim: ${escapeHtml(c.movieName || c.movieSlug)} ↗
+              <i class="ri-film-line"></i> Phim: ${escapeHtml(c.movieName || c.movieSlug)} ↗
             </a>
           </div>
         </div>
         <div class="admin-item-actions">
           <button type="button" class="btn-admin-sm del" data-del-cmt="${c.id}">
-            🗑 Xóa Cmt
+            <i class="ri-delete-bin-6-line"></i> Xóa Cmt
           </button>
           ${
             !isAdminEmail(c.userEmail)
               ? `<button type="button" class="btn-admin-sm ban" data-ban-user="${c.uid}">
-                   🚫 Chặn User
+                   <i class="ri-forbid-2-line"></i> Chặn User
                  </button>`
               : ""
           }
@@ -208,6 +239,8 @@ function renderAdminUsers() {
   container.innerHTML = filtered
     .map((u) => {
       const isUserAdmin = isAdminEmail(u.email) || u.role === "admin";
+      const currentRank = u.rank || "nguoi_moi";
+
       return `
         <div class="admin-item">
           <div class="admin-item-left">
@@ -219,10 +252,25 @@ function renderAdminUsers() {
             <div class="admin-item-info">
               <h4>
                 ${escapeHtml(u.displayName || "Thành viên")}
-                ${isUserAdmin ? `<span class="role-badge-admin">ADMIN</span>` : ""}
+                ${renderUserBadgeHtml(isUserAdmin ? "admin" : "user", currentRank)}
                 ${u.isBanned ? `<span class="status-banned-tag">ĐANG BỊ CHẶN</span>` : ""}
               </h4>
               <div class="sub-meta">${escapeHtml(u.email || "Không có email")}</div>
+
+              ${
+                !isUserAdmin
+                  ? `
+                    <div class="rank-assign-row">
+                      <label><i class="ri-medal-line"></i> Cấp danh hiệu:</label>
+                      <select class="rank-select-admin" data-rank-uid="${u.uid}">
+                        <option value="nguoi_moi" ${currentRank === "nguoi_moi" ? "selected" : ""}>🌱 Cấp 1: Người Mới</option>
+                        <option value="mot_phim" ${currentRank === "mot_phim" ? "selected" : ""}>🎬 Cấp 2: Mọt Phim</option>
+                        <option value="thanh_cay_phim" ${currentRank === "thanh_cay_phim" ? "selected" : ""}>🔥 Cấp 3: Thánh Cày Phim</option>
+                      </select>
+                    </div>
+                  `
+                  : ""
+              }
             </div>
           </div>
           <div class="admin-item-actions">
@@ -253,6 +301,15 @@ function renderAdminUsers() {
       `;
     })
     .join("");
+
+  // Gắn sự kiện khi Admin đổi Danh hiệu cho thành viên
+  container.querySelectorAll("[data-rank-uid]").forEach((sel) => {
+    sel.addEventListener("change", () => {
+      const uid = sel.dataset.rankUid;
+      const newRank = sel.value;
+      updateUserRankByAdmin(uid, newRank);
+    });
+  });
 
   container.querySelectorAll("[data-toggle-ban]").forEach((btn) => {
     btn.addEventListener("click", () => {

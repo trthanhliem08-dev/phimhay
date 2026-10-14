@@ -1,8 +1,8 @@
 // ============================================================================
 // FILE: js/services/auth.js
-// MỤC ĐÍCH: Quản lý Đăng nhập (Google & Email), Đăng xuất, đồng bộ hồ sơ
-//           vào bảng `users` trên Firestore, kiểm tra quyền Admin theo email
-//           `liemtran.238460@gmail.com` và báo lỗi chi tiết dễ hiểu.
+// MỤC ĐÍCH: Quản lý Đăng nhập (Google & Email), đồng bộ hồ sơ (kèm danh hiệu
+//           mặc định `nguoi_moi`) và lắng nghe Thông báo Toàn Server 60 giây
+//           ngay bên dưới thanh Header trên mọi trang.
 // ============================================================================
 
 import {
@@ -19,6 +19,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  onSnapshot,
   serverTimestamp
 } from "../config/firebase-config.js";
 import { showToast, DEFAULT_AVATARS, escapeHtml } from "../utils/helpers.js";
@@ -27,10 +28,6 @@ let currentUserProfile = undefined;
 let isAuthReady = false;
 const authListeners = [];
 
-/**
- * Đăng ký hàm lắng nghe khi trạng thái đăng nhập thay đổi.
- * Chỉ gọi callback ngay lập tức nếu Firebase đã kiểm tra xong phiên đăng nhập (isAuthReady = true).
- */
 export function subscribeAuth(callback) {
   authListeners.push(callback);
   if (isAuthReady) {
@@ -47,17 +44,11 @@ function notifyAuthListeners(profile) {
   authListeners.forEach((cb) => cb(profile));
 }
 
-/**
- * Kiểm tra xem một email có phải là Quản trị viên hay không
- */
 export function isAdminEmail(email) {
   if (!email) return false;
   return email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
 
-/**
- * Tạo hồ sơ dự phòng trực tiếp từ tài khoản Google/Email nếu Firestore chưa bật hoặc chặn quyền
- */
 function buildFallbackProfile(firebaseUser) {
   const isUserAdmin = isAdminEmail(firebaseUser.email);
   return {
@@ -68,13 +59,14 @@ function buildFallbackProfile(firebaseUser) {
       (firebaseUser.email ? firebaseUser.email.split("@")[0] : "Thành viên"),
     avatarUrl: firebaseUser.photoURL || DEFAULT_AVATARS[0],
     role: isUserAdmin ? "admin" : "user",
+    rank: "nguoi_moi",
     isBanned: false
   };
 }
 
 /**
  * Đồng bộ thông tin user từ Firebase Auth vào bảng `users` trong Firestore.
- * Nếu Firestore chưa tạo hoặc bị chặn Rules, vẫn trả về hồ sơ tạm để không làm gãy đăng nhập!
+ * Người mới đăng ký mặc định nhận rank = "nguoi_moi" (Người Mới).
  */
 async function syncUserToFirestore(firebaseUser) {
   const fallback = buildFallbackProfile(firebaseUser);
@@ -92,25 +84,26 @@ async function syncUserToFirestore(firebaseUser) {
       return newProfile;
     } else {
       const existingData = userSnap.data();
+      const updates = {};
       if (isUserAdmin && existingData.role !== "admin") {
-        await setDoc(userRef, { role: "admin" }, { merge: true });
+        updates.role = "admin";
         existingData.role = "admin";
+      }
+      if (!existingData.rank) {
+        updates.rank = "nguoi_moi";
+        existingData.rank = "nguoi_moi";
+      }
+      if (Object.keys(updates).length > 0) {
+        await setDoc(userRef, updates, { merge: true });
       }
       return existingData;
     }
   } catch (firestoreErr) {
     console.warn("Cảnh báo Firestore khi đồng bộ user:", firestoreErr);
-    showToast(
-      `Đã đăng nhập, nhưng Firestore báo lỗi (${firestoreErr.code || "chưa mở quyền Rules"}).`,
-      "info"
-    );
     return fallback;
   }
 }
 
-/**
- * Dịch mã lỗi Firebase Auth sang tiếng Việt chỉ rõ cách sửa
- */
 function translateAuthError(error) {
   const code = error?.code || "";
   if (code === "auth/unauthorized-domain") {
@@ -128,9 +121,6 @@ function translateAuthError(error) {
   return `Lỗi đăng nhập (${code || error.message})`;
 }
 
-/**
- * Đăng nhập nhanh bằng tài khoản Google
- */
 export async function loginWithGoogle() {
   try {
     const result = await signInWithPopup(auth, googleProvider);
@@ -149,9 +139,6 @@ export async function loginWithGoogle() {
   }
 }
 
-/**
- * Đăng nhập bằng Email & Mật khẩu
- */
 export async function loginWithEmail(email, password) {
   try {
     const result = await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -166,9 +153,6 @@ export async function loginWithEmail(email, password) {
   }
 }
 
-/**
- * Đăng ký tài khoản mới bằng Email & Mật khẩu
- */
 export async function registerWithEmail(displayName, email, password) {
   try {
     const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
@@ -178,7 +162,7 @@ export async function registerWithEmail(displayName, email, password) {
       photoURL: randomAvatar
     });
     const profile = await syncUserToFirestore(result.user);
-    showToast("Tạo tài khoản thành công!", "success");
+    showToast("Tạo tài khoản thành công! Bạn nhận danh hiệu Người Mới.", "success");
     closeAuthModal();
     return profile;
   } catch (error) {
@@ -188,17 +172,11 @@ export async function registerWithEmail(displayName, email, password) {
   }
 }
 
-/**
- * Đăng xuất tài khoản
- */
 export async function logoutUser() {
   await signOut(auth);
   showToast("Đã đăng xuất tài khoản.", "info");
 }
 
-/**
- * Mở / Đóng hộp thoại Đăng nhập ngay trên trang
- */
 export function openAuthModal() {
   let modal = document.getElementById("auth-modal");
   if (!modal) {
@@ -213,9 +191,6 @@ export function closeAuthModal() {
   if (modal) modal.classList.remove("active");
 }
 
-/**
- * Khởi tạo hộp thoại Đăng nhập / Đăng ký (dùng chung cho mọi trang)
- */
 function renderAuthModal() {
   const modalHtml = `
     <div id="auth-modal" class="auth-modal-overlay">
@@ -224,7 +199,7 @@ function renderAuthModal() {
         <div class="auth-modal-header">
           <span class="brand-badge">BIỂN PHIM HAY</span>
           <h3 id="auth-modal-title">Đăng nhập tài khoản</h3>
-          <p>Đăng nhập để bình luận real-time, đổi Avatar và lưu tủ phim</p>
+          <p>Đăng nhập để bình luận real-time, nhận danh hiệu và đổi Avatar</p>
         </div>
 
         <button type="button" class="btn-google-login" id="btn-google-auth">
@@ -311,10 +286,139 @@ function renderAuthModal() {
   });
 }
 
+// ============================================================================
+// HỆ THỐNG THÔNG BÁO TOÀN SERVER CHẠY CHỮ DƯỚI HEADER TRONG 1 PHÚT (60 GIÂY)
+// ============================================================================
+let broadcastHideTimer = null;
+let broadcastCountdownInterval = null;
+let lastBroadcastId = null;
+let broadcastListenerStarted = false;
+
+function initGlobalBroadcastListener() {
+  if (broadcastListenerStarted) return;
+  broadcastListenerStarted = true;
+
+  const broadcastRef = doc(db, "settings", "broadcast");
+  onSnapshot(
+    broadcastRef,
+    (docSnap) => {
+      if (!docSnap.exists()) {
+        hideBroadcastBar();
+        return;
+      }
+
+      const data = docSnap.data();
+      if (!data || !data.active || !data.message) {
+        hideBroadcastBar();
+        return;
+      }
+
+      const now = Date.now();
+      const expiresAtMs = Number(data.expiresAtMs || 0);
+      const broadcastId = data.broadcastId || String(expiresAtMs);
+
+      // Nếu thông báo đã hết hạn 1 phút
+      if (expiresAtMs <= now) {
+        hideBroadcastBar();
+        return;
+      }
+
+      // Tính thời gian còn lại (tối đa 60 giây)
+      const remainingMs = Math.min(60000, Math.max(1000, expiresAtMs - now));
+      showBroadcastBar(data.message, remainingMs, broadcastId);
+    },
+    (err) => {
+      console.warn("Không thể lắng nghe thông báo toàn server:", err);
+    }
+  );
+}
+
+function showBroadcastBar(message, durationMs, broadcastId) {
+  let bar = document.getElementById("global-broadcast-bar");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "global-broadcast-bar";
+    bar.className = "global-broadcast-bar";
+
+    const headerEl = document.querySelector(".site-header");
+    if (headerEl && headerEl.parentNode) {
+      headerEl.insertAdjacentElement("afterend", bar);
+    } else {
+      document.body.prepend(bar);
+    }
+  }
+
+  // Nhân bản thông báo 10 lần trên dải băng chuyền để dù câu ngắn hay dài
+  // cũng chạy nối đuôi nhau liên tục mượt mà suốt đủ 1 phút!
+  const cleanMsg = escapeHtml(message);
+  const repeatedUnits = Array.from({ length: 10 })
+    .map(
+      () => `
+      <span class="broadcast-item">
+        <span class="broadcast-tag"><i class="ri-megaphone-fill"></i> THÔNG BÁO ADMIN</span>
+        <span class="broadcast-text">${cleanMsg}</span>
+        <span class="broadcast-sep">✦</span>
+      </span>
+    `
+    )
+    .join("");
+
+  bar.innerHTML = `
+    <div class="broadcast-inner">
+      <div class="broadcast-pinned-label">
+        <span class="broadcast-live-dot"></span>
+        <i class="ri-Volume-up-fill"></i>
+        <span>TOÀN SERVER</span>
+      </div>
+      <div class="broadcast-marquee-viewport">
+        <div class="broadcast-marquee-track">
+          ${repeatedUnits}
+        </div>
+      </div>
+      <div class="broadcast-timer-pill" id="broadcast-timer-pill">
+        <i class="ri-timer-flash-line"></i>
+        <span id="broadcast-seconds-left">${Math.ceil(durationMs / 1000)}s</span>
+      </div>
+    </div>
+  `;
+
+  bar.classList.add("active");
+  lastBroadcastId = broadcastId;
+
+  clearTimeout(broadcastHideTimer);
+  clearInterval(broadcastCountdownInterval);
+
+  const endTime = Date.now() + durationMs;
+  broadcastCountdownInterval = setInterval(() => {
+    const secLeft = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+    const secEl = document.getElementById("broadcast-seconds-left");
+    if (secEl) secEl.textContent = `${secLeft}s`;
+    if (secLeft <= 0) {
+      clearInterval(broadcastCountdownInterval);
+    }
+  }, 500);
+
+  broadcastHideTimer = setTimeout(() => {
+    hideBroadcastBar();
+  }, durationMs);
+}
+
+function hideBroadcastBar() {
+  clearTimeout(broadcastHideTimer);
+  clearInterval(broadcastCountdownInterval);
+  const bar = document.getElementById("global-broadcast-bar");
+  if (bar) {
+    bar.classList.remove("active");
+  }
+}
+
 /**
- * Khởi chạy lắng nghe trạng thái đăng nhập và tự động cập nhật khu vực `#header-user-area`
+ * Khởi chạy lắng nghe trạng thái đăng nhập + Lắng nghe thông báo toàn server
  */
 export function initHeaderAuthUI() {
+  // Bật lắng nghe thông báo chạy chữ dưới Header cho TẤT CẢ người đang mở web
+  initGlobalBroadcastListener();
+
   onAuthStateChanged(auth, async (firebaseUser) => {
     const userArea = document.getElementById("header-user-area");
 

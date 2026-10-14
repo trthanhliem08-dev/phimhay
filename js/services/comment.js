@@ -1,9 +1,7 @@
 // ============================================================================
 // FILE: js/services/comment.js
-// MỤC ĐÍCH: Xử lý Bình luận Real-time trên Firestore cho từng bộ phim:
-//           - Lắng nghe bình luận mới theo thời gian thực (onSnapshot)
-//           - Kiểm tra tài khoản có bị Admin chặn (isBanned) trước khi gửi
-//           - Cho phép chính chủ hoặc Admin (liemtran.238460@gmail.com) xóa cmt
+// MỤC ĐÍCH: Xử lý Bình luận Real-time, Phân cấp Danh hiệu (Rank) và Phát
+//           thông báo chạy chữ toàn server trong 60 giây.
 // ============================================================================
 
 import {
@@ -11,24 +9,22 @@ import {
   db,
   doc,
   getDoc,
+  setDoc,
   collection,
   addDoc,
   deleteDoc,
   updateDoc,
   query,
   where,
+  getDocs,
   onSnapshot,
   serverTimestamp
 } from "../config/firebase-config.js";
 import { isAdminEmail } from "./auth.js";
-import { showToast } from "../utils/helpers.js";
+import { showToast, USER_RANKS } from "../utils/helpers.js";
 
 /**
  * Lắng nghe danh sách bình luận Real-time của một bộ phim theo `movieSlug`
- * (Sắp xếp thời gian mới nhất ở phía Client để không bắt buộc tạo Composite Index trên Firebase)
- * @param {string} movieSlug - Mã slug của phim
- * @param {Function} onUpdate - Hàm callback nhận mảng bình luận mỗi khi có thay đổi
- * @returns {Function} Hàm hủy lắng nghe (unsubscribe)
  */
 export function listenMovieComments(movieSlug, onUpdate) {
   const commentsRef = collection(db, "comments");
@@ -45,7 +41,6 @@ export function listenMovieComments(movieSlug, onUpdate) {
         });
       });
 
-      // Sắp xếp bình luận mới nhất lên đầu
       list.sort((a, b) => {
         const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.clientTime || 0);
         const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.clientTime || 0);
@@ -61,7 +56,7 @@ export function listenMovieComments(movieSlug, onUpdate) {
 }
 
 /**
- * Gửi bình luận mới vào bộ phim
+ * Gửi bình luận mới vào bộ phim (Lưu kèm cả `userRank` để hiển thị Badge)
  */
 export async function addMovieComment({ movieSlug, movieName, content }) {
   const currentUser = auth.currentUser;
@@ -76,10 +71,9 @@ export async function addMovieComment({ movieSlug, movieName, content }) {
     throw new Error("EMPTY_CONTENT");
   }
 
-  // Kiểm tra trực tiếp trong bảng `users` xem tài khoản có đang bị Admin khóa mõm không
   const userRef = doc(db, "users", currentUser.uid);
   const userSnap = await getDoc(userRef);
-  let userData = userSnap.exists() ? userSnap.data() : null;
+  const userData = userSnap.exists() ? userSnap.data() : null;
 
   if (userData && userData.isBanned) {
     showToast("Tài khoản của bạn đã bị Quản trị viên chặn quyền bình luận!", "error");
@@ -99,6 +93,8 @@ export async function addMovieComment({ movieSlug, movieName, content }) {
   const role =
     userData?.role === "admin" || isAdminEmail(currentUser.email) ? "admin" : "user";
 
+  const userRank = userData?.rank || "nguoi_moi";
+
   await addDoc(collection(db, "comments"), {
     movieSlug,
     movieName: movieName || movieSlug,
@@ -107,6 +103,7 @@ export async function addMovieComment({ movieSlug, movieName, content }) {
     userName: displayName,
     userAvatar: avatarUrl,
     userRole: role,
+    userRank: userRank,
     content: cleanContent,
     clientTime: Date.now(),
     createdAt: serverTimestamp()
@@ -130,7 +127,7 @@ export async function deleteMovieComment(commentId) {
 }
 
 /**
- * Chặn nhanh một người dùng ngay từ khung bình luận (Chỉ dành cho Admin)
+ * Chặn / Mở chặn một người dùng (Chỉ dành cho Admin)
  */
 export async function toggleBanUserByAdmin(targetUid, banStatus = true) {
   try {
@@ -149,4 +146,69 @@ export async function toggleBanUserByAdmin(targetUid, banStatus = true) {
     showToast("Không thể thay đổi trạng thái người dùng.", "error");
     throw error;
   }
+}
+
+/**
+ * Admin phân cấp Danh hiệu (Rank) cho thành viên và đồng bộ lên mọi bình luận của họ
+ */
+export async function updateUserRankByAdmin(targetUid, newRankKey) {
+  if (!USER_RANKS[newRankKey]) return;
+  try {
+    // 1. Cập nhật trong bảng `users`
+    await updateDoc(doc(db, "users", targetUid), {
+      rank: newRankKey
+    });
+
+    // 2. Đồng bộ lại toàn bộ bình luận cũ của user này trong bảng `comments`
+    const q = query(collection(db, "comments"), where("uid", "==", targetUid));
+    const snap = await getDocs(q);
+    const tasks = [];
+    snap.forEach((d) => {
+      tasks.push(updateDoc(doc(db, "comments", d.id), { userRank: newRankKey }));
+    });
+    await Promise.all(tasks);
+
+    showToast(`Đã cấp danh hiệu "${USER_RANKS[newRankKey].label}" cho thành viên!`, "success");
+  } catch (error) {
+    console.error("Lỗi cập nhật danh hiệu:", error);
+    showToast("Không thể cập nhật danh hiệu lúc này.", "error");
+    throw error;
+  }
+}
+
+/**
+ * Admin phát thông báo chạy chữ toàn Server trong đúng 1 phút (60,000ms)
+ */
+export async function publishGlobalBroadcast(messageText) {
+  const clean = (messageText || "").trim();
+  if (!clean) {
+    showToast("Vui lòng nhập nội dung thông báo!", "error");
+    return;
+  }
+
+  const now = Date.now();
+  const expiresAtMs = now + 60 * 1000; // Đúng 1 phút (60 giây)
+
+  await setDoc(doc(db, "settings", "broadcast"), {
+    message: clean,
+    active: true,
+    createdAtMs: now,
+    expiresAtMs: expiresAtMs,
+    broadcastId: `bc_${now}`,
+    updatedAt: serverTimestamp()
+  });
+
+  showToast("Đã phát thông báo chạy chữ lên toàn Server trong 1 phút!", "success");
+}
+
+/**
+ * Admin tắt sớm thông báo toàn Server
+ */
+export async function stopGlobalBroadcast() {
+  await setDoc(
+    doc(db, "settings", "broadcast"),
+    { active: false, expiresAtMs: 0 },
+    { merge: true }
+  );
+  showToast("Đã dừng phát thông báo toàn Server.", "info");
 }

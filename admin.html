@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quản Trị Hệ Thống - Biển Phim Hay</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
   <link rel="stylesheet" href="./css/style.css" />
   <link rel="stylesheet" href="./css/admin.css" />
@@ -29,9 +26,7 @@
         </div>
       </a>
 
-      <nav class="main-nav">
-        <a href="index.html" class="nav-link">← Về Trang Chủ</a>
-      </nav>
+
 
       <div class="header-actions">
         <div id="header-user-area"></div>
@@ -42,11 +37,47 @@
   <!-- ==================== NỘI DUNG QUẢN TRỊ VIÊN ==================== -->
   <main class="container admin-container" id="admin-root" style="display: none;">
 
+    <div style="margin-bottom: 18px;">
+      <a href="index.html" class="btn-back-home" style="display: inline-flex; align-items: center; gap: 10px; background: rgba(16, 29, 54, 0.85); border: 1px solid rgba(125, 211, 252, 0.28); color: var(--text-main); padding: 8px 18px 8px 8px; border-radius: 999px; font-size: 0.88rem; font-weight: 700;">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%); color: #040914; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="ri-arrow-left-line"></i>
+        </span>
+        <span>Quay lại Trang Chủ</span>
+      </a>
+    </div>
     <section class="admin-banner">
       <div>
-        <h1>🛡️ Trung Tâm Quản Trị WebPhim</h1>
-        <p>Xin chào Quản trị viên <strong id="admin-email-label">liemtran.238460@gmail.com</strong> — Mọi thay đổi được đồng bộ Real-time.</p>
+        <h1><i class="ri-shield-star-fill" style="color: #fde68a;"></i> Trung Tâm Quản Trị Biển Phim Hay</h1>
+        <p>Xin chào Quản trị viên tối cao <strong id="admin-email-label">liemtran.238460@gmail.com</strong> — Mọi phân quyền & thông báo đồng bộ Real-time.</p>
       </div>
+    </section>
+
+    <!-- TRẠM PHÁT THÔNG BÁO TOÀN SERVER (CHẠY CHỮ NGANG DƯỚI HEADER TRONG 1 PHÚT) -->
+    <section class="broadcast-control-card">
+      <div class="broadcast-card-header">
+        <div>
+          <h2><i class="ri-megaphone-fill"></i> Phát Thông Báo Chạy Chữ Toàn Server (Hiển thị 1 Phút)</h2>
+          <p>Dòng thông báo sẽ lập tức xuất hiện ngay dưới thanh Header của tất cả người đang xem trên web và tự động lặp lại liên tục trong đúng 60 giây.</p>
+        </div>
+        <span id="admin-broadcast-status" class="broadcast-status-badge">Đang chờ lệnh</span>
+      </div>
+
+      <form id="admin-broadcast-form" class="broadcast-form-row">
+        <input
+          type="text"
+          id="input-broadcast-msg"
+          class="broadcast-input"
+          placeholder="Nhập nội dung thông báo toàn server (VD: Chúc anh em xem phim vui vẻ trên Biển Phim Hay!)..."
+          maxlength="220"
+          required
+        />
+        <button type="submit" class="btn-broadcast-send">
+          <i class="ri-broadcast-fill"></i> Phát Lên Toàn Web (60s)
+        </button>
+        <button type="button" id="btn-broadcast-stop" class="btn-broadcast-stop" title="Tắt thông báo ngay lập tức">
+          <i class="ri-stop-circle-line"></i> Tắt Ngay
+        </button>
+      </form>
     </section>
 
     <!-- Thống kê nhanh -->
@@ -108,10 +139,10 @@
   <div class="container" id="admin-denied-box" style="margin-top: 60px; text-align: center;">
     <h2>🔒 Đang kiểm tra quyền Quản trị viên...</h2>
     <p style="color: var(--text-muted); margin-top: 8px;">
-      Trang này chỉ dành riêng cho tài khoản Quản trị viên.
+      Trang này chỉ dành riêng cho tài khoản Quản trị viên (<strong>liemtran.238460@gmail.com</strong>).
     </p>
   </div>
 
   <script type="module" src="./js/pages/admin.js"></script>
 </body>
-</html>
+</html

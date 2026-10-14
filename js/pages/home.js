@@ -115,14 +115,23 @@ function bindEvents() {
     });
   });
 
-  // 3. Nút "Xem toàn bộ" ở 2 khu vực Spotlight
+  // 3. Nút "Xem toàn bộ" ở 2 khu vực Spotlight (Phim Bộ & Phim Việt Nam)
   document.querySelectorAll("[data-more-cat]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       const cat = btn.dataset.moreCat;
-      state.mode = "category";
-      state.value = cat;
-      state.title = cat === "phim-bo" ? "Tuyển Tập Phim Bộ" : "Thế Giới Anime & Hoạt Hình";
+      resetFilterControls();
+      if (cat === "viet-nam") {
+        state.mode = "country";
+        state.value = "viet-nam";
+        state.title = "Phim Việt Nam Đặc Sắc";
+        const countrySelect = document.getElementById("filter-country");
+        if (countrySelect) countrySelect.value = "viet-nam";
+      } else {
+        state.mode = "category";
+        state.value = cat;
+        state.title = "Tuyển Tập Phim Bộ";
+      }
       state.page = 1;
       loadMovies(true);
     });
@@ -328,7 +337,7 @@ async function loadSpotlightRows() {
   try {
     const [seriesRes, animeRes] = await Promise.all([
       getMoviesByCategory("phim-bo", 1),
-      getMoviesByCategory("hoat-hinh", 1)
+      getMoviesByCountry("viet-nam", 1)
     ]);
 
     renderMovieGrid(seriesGrid, (seriesRes.items || []).slice(0, 5));

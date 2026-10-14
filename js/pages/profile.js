@@ -27,7 +27,8 @@ import {
   DEFAULT_AVATARS,
   getWatchHistory,
   showToast,
-  escapeHtml
+  escapeHtml,
+  renderUserBadgeHtml
 } from "../utils/helpers.js";
 
 let activeProfile = null;
@@ -64,8 +65,8 @@ function populateProfileUI(profile) {
   const badge = document.getElementById("profile-role-badge");
   const isAdmin = profile.role === "admin" || isAdminEmail(profile.email);
   if (badge) {
-    badge.className = `role-pill ${isAdmin ? "admin" : "user"}`;
-    badge.innerHTML = isAdmin ? '<i class="ri-shield-star-fill"></i> Quản trị viên (Admin)' : '<i class="ri-user-smile-line"></i> Thành viên';
+    badge.className = "";
+    badge.innerHTML = renderUserBadgeHtml(isAdmin ? "admin" : "user", profile.rank || "nguoi_moi");
   }
 }
 

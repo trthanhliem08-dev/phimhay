@@ -24,7 +24,8 @@ import {
   saveWatchHistory,
   escapeHtml,
   timeAgo,
-  showToast
+  showToast,
+  renderUserBadgeHtml
 } from "../utils/helpers.js";
 
 const watchState = {
@@ -306,6 +307,7 @@ function renderCommentInputBox() {
       <div class="comment-user-bar">
         <img src="${escapeHtml(profile.avatarUrl)}" alt="Avatar" />
         <span>Bình luận với tên <strong>${escapeHtml(profile.displayName)}</strong></span>
+        ${renderUserBadgeHtml(profile.role, profile.rank)}
       </div>
       <textarea
         id="comment-input"
@@ -385,11 +387,7 @@ function startRealtimeComments() {
               <div class="comment-meta">
                 <span class="comment-author">
                   ${escapeHtml(cmt.userName || "Thành viên")}
-                  ${
-                    cmt.userRole === "admin"
-                      ? `<span class="role-badge-admin">ADMIN</span>`
-                      : ""
-                  }
+                  ${renderUserBadgeHtml(cmt.userRole, cmt.userRank)}
                 </span>
                 <span class="comment-time">${timeAgo(cmt.createdAt || cmt.clientTime)}</span>
               </div>

@@ -1,8 +1,53 @@
 // ============================================================================
 // FILE: js/utils/helpers.js
 // MỤC ĐÍCH: Các hàm tiện ích dùng chung cho toàn bộ website (Toast thông báo,
-//           định dạng thời gian, lưu lịch sử xem phim trên trình duyệt).
+//           định dạng thời gian, lưu lịch sử xem phim, và hiển thị Danh hiệu/Badge).
 // ============================================================================
+
+/**
+ * Cấu hình 3 cấp độ Danh hiệu thành viên do Admin phân quyền
+ */
+export const USER_RANKS = {
+  nguoi_moi: {
+    key: "nguoi_moi",
+    label: "Người Mới",
+    icon: "ri-seedling-line",
+    className: "rank-badge rank-1"
+  },
+  mot_phim: {
+    key: "mot_phim",
+    label: "Mọt Phim",
+    icon: "ri-film-fill",
+    className: "rank-badge rank-2"
+  },
+  thanh_cay_phim: {
+    key: "thanh_cay_phim",
+    label: "Thánh Cày Phim",
+    icon: "ri-fire-fill",
+    className: "rank-badge rank-3"
+  }
+};
+
+/**
+ * Trả về mã HTML hiển thị Badge kế bên tên người dùng khi bình luận hoặc trong hồ sơ.
+ * Huy hiệu ADMIN luôn rực rỡ và quyền lực nhất, không danh hiệu nào vượt qua.
+ */
+export function renderUserBadgeHtml(role = "user", rank = "nguoi_moi") {
+  if (role === "admin") {
+    return `
+      <span class="role-badge-admin" title="Quản trị viên Tối cao">
+        <i class="ri-vip-crown-fill"></i> ADMIN
+      </span>
+    `;
+  }
+
+  const rankInfo = USER_RANKS[rank] || USER_RANKS.nguoi_moi;
+  return `
+    <span class="${rankInfo.className}" title="Danh hiệu: ${rankInfo.label}">
+      <i class="${rankInfo.icon}"></i> ${rankInfo.label}
+    </span>
+  `;
+}
 
 /**
  * Hiển thị thông báo nổi (Toast) ở góc dưới bên phải màn hình
@@ -34,12 +79,10 @@ export function showToast(message, type = "info") {
 
   container.appendChild(toast);
 
-  // Hiệu ứng trượt vào
   requestAnimationFrame(() => {
     toast.classList.add("show");
   });
 
-  // Tự động ẩn sau 3.5 giây
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => toast.remove(), 300);
