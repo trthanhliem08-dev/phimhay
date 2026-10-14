@@ -27,7 +27,8 @@ import {
   publishGlobalBroadcast,
   stopGlobalBroadcast,
   enableMaintenanceByAdmin,
-  disableMaintenanceByAdmin
+  disableMaintenanceByAdmin,
+  saveAdsConfigByAdmin
 } from "../services/comment.js";
 import {
   escapeHtml,
@@ -108,6 +109,8 @@ document.addEventListener("DOMContentLoaded", () => {
     await disableMaintenanceByAdmin();
   });
 
+  bindAdminAdsEvents();
+
   document.getElementById("search-comments-admin")?.addEventListener("input", (e) => {
     commentKeyword = e.target.value.trim().toLowerCase();
     renderAdminComments();
@@ -144,7 +147,7 @@ function startAdminRealtimeListeners() {
   onSnapshot(collection(db, "users"), (snapshot) => {
     const list = [];
     snapshot.forEach((docSnap) => {
-      if (docSnap.id === "GLOBAL_BROADCAST_CONFIG" || docSnap.id === "GLOBAL_MAINTENANCE_CONFIG" || docSnap.data()?.isBroadcastDoc) return;
+      if (docSnap.id === "GLOBAL_BROADCAST_CONFIG" || docSnap.id === "GLOBAL_MAINTENANCE_CONFIG" || docSnap.id === "GLOBAL_ADS_CONFIG" || docSnap.data()?.isBroadcastDoc) return;
       list.push({ id: docSnap.id, ...docSnap.data() });
     });
     allUsers = list;
@@ -166,6 +169,36 @@ function startAdminRealtimeListeners() {
     } else {
       badge.className = "broadcast-status-badge live";
       badge.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Web đang Mở bình thường`;
+    }
+  });
+
+  // 2c. Lắng nghe cấu hình Banner Quảng Cáo để đổ sẵn vào ô nhập của Admin
+  onSnapshot(doc(db, "users", "GLOBAL_ADS_CONFIG"), (docSnap) => {
+    if (!docSnap.exists()) return;
+    const cfg = docSnap.data();
+    const masterEl = document.getElementById("ads-master-enable");
+    const modeEl = document.getElementById("ads-size-mode");
+    const widthEl = document.getElementById("ads-banner-width");
+    const widthGroup = document.getElementById("ads-width-group");
+
+    if (masterEl) masterEl.checked = cfg.enabled !== false;
+    if (modeEl && cfg.sizeMode) {
+      modeEl.value = cfg.sizeMode;
+      if (widthGroup) {
+        widthGroup.style.display = cfg.sizeMode === "original" ? "none" : "flex";
+      }
+    }
+    if (widthEl && cfg.bannerWidth) widthEl.value = cfg.bannerWidth;
+
+    if (cfg.leftBanner) {
+      document.getElementById("ads-left-enable").checked = cfg.leftBanner.enabled !== false;
+      document.getElementById("ads-left-img").value = cfg.leftBanner.imageUrl || "";
+      document.getElementById("ads-left-link").value = cfg.leftBanner.targetUrl || "";
+    }
+    if (cfg.rightBanner) {
+      document.getElementById("ads-right-enable").checked = cfg.rightBanner.enabled !== false;
+      document.getElementById("ads-right-img").value = cfg.rightBanner.imageUrl || "";
+      document.getElementById("ads-right-link").value = cfg.rightBanner.targetUrl || "";
     }
   });
 
@@ -374,5 +407,98 @@ function renderAdminUsers() {
         showToast("Đã đặt lại Avatar mặc định cho người dùng!", "success");
       }
     });
+  });
+}
+
+/**
+ * Xử lý sự kiện Quản lý 2 Banner Quảng Cáo trong trang Admin
+ */
+function bindAdminAdsEvents() {
+  const modeSelect = document.getElementById("ads-size-mode");
+  const widthGroup = document.getElementById("ads-width-group");
+
+  modeSelect?.addEventListener("change", () => {
+    if (widthGroup) {
+      widthGroup.style.display = modeSelect.value === "original" ? "none" : "flex";
+    }
+  });
+
+  // Chọn ảnh từ máy cho Banner Trái (Giữ nguyên 100% tỉ lệ khung hình gốc)
+  document.getElementById("ads-left-file")?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressBannerPreserveRatio(file, 360, 0.84);
+      document.getElementById("ads-left-img").value = dataUrl;
+      document.getElementById("ads-left-file-status").textContent = `Đã nạp: ${file.name}`;
+      showToast("Đã nạp ảnh Banner Trái! Bấm Lưu để áp dụng.", "info");
+    } catch {
+      showToast("Không thể đọc file ảnh này.", "error");
+    }
+  });
+
+  // Chọn ảnh từ máy cho Banner Phải (Giữ nguyên 100% tỉ lệ khung hình gốc)
+  document.getElementById("ads-right-file")?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressBannerPreserveRatio(file, 360, 0.84);
+      document.getElementById("ads-right-img").value = dataUrl;
+      document.getElementById("ads-right-file-status").textContent = `Đã nạp: ${file.name}`;
+      showToast("Đã nạp ảnh Banner Phải! Bấm Lưu để áp dụng.", "info");
+    } catch {
+      showToast("Không thể đọc file ảnh này.", "error");
+    }
+  });
+
+  // Submit Lưu cấu hình Banner
+  document.getElementById("admin-ads-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload = {
+      enabled: document.getElementById("ads-master-enable")?.checked ?? true,
+      sizeMode: document.getElementById("ads-size-mode")?.value || "custom",
+      bannerWidth: Number(document.getElementById("ads-banner-width")?.value) || 145,
+      leftBanner: {
+        enabled: document.getElementById("ads-left-enable")?.checked ?? true,
+        imageUrl: document.getElementById("ads-left-img")?.value.trim() || "",
+        targetUrl: document.getElementById("ads-left-link")?.value.trim() || "#",
+        altText: "Banner quảng cáo bên trái"
+      },
+      rightBanner: {
+        enabled: document.getElementById("ads-right-enable")?.checked ?? true,
+        imageUrl: document.getElementById("ads-right-img")?.value.trim() || "",
+        targetUrl: document.getElementById("ads-right-link")?.value.trim() || "#",
+        altText: "Banner quảng cáo bên phải"
+      }
+    };
+    await saveAdsConfigByAdmin(payload);
+  });
+}
+
+/**
+ * Nén ảnh Banner khi tải từ máy tính nhưng GIỮ NGUYÊN 100% TỈ LỆ DÀI/RỘNG GỐC (Không crop!)
+ */
+function compressBannerPreserveRatio(file, maxWidth = 360, quality = 0.84) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+        const targetW = Math.round(img.width * scale);
+        const targetH = Math.round(img.height * scale);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 }

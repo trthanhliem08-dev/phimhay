@@ -294,3 +294,21 @@ export async function disableMaintenanceByAdmin() {
   );
   showToast("✅ Đã TẮT Bảo trì! Người xem có thể truy cập web bình thường.", "info");
 }
+
+/**
+ * Admin lưu cấu hình 2 Banner Quảng Cáo Nổi (Trái & Phải) lên Firestore Real-time
+ */
+export async function saveAdsConfigByAdmin(adsPayload) {
+  try {
+    await setDoc(doc(db, "users", "GLOBAL_ADS_CONFIG"), {
+      isBroadcastDoc: true,
+      ...adsPayload,
+      updatedAt: serverTimestamp()
+    });
+    showToast("🖼️ Đã cập nhật Banner Quảng Cáo trên Trang Chủ thành công!", "success");
+  } catch (error) {
+    console.error("Lỗi lưu cấu hình Banner:", error);
+    showToast("Không thể lưu cấu hình Banner: " + (error.code || error.message), "error");
+    throw error;
+  }
+}

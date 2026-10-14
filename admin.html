@@ -121,6 +121,118 @@
       </form>
     </section>
 
+        <!-- TRẠM QUẢN LÝ 2 BANNER QUẢNG CÁO NỔI Ở TRANG CHỦ (TỰ CO GIÃN THEO HÌNH GỐC) -->
+    <section class="broadcast-control-card" style="border-color: rgba(103, 232, 249, 0.4);">
+      <div class="broadcast-card-header">
+        <div>
+          <h2 style="color: #67e8f9;"><i class="ri-advertisement-fill"></i> Quản Lý 2 Banner Quảng Cáo Nổi (Chỉ hiện ở Trang Chủ)</h2>
+          <p>Hỗ trợ dán link ảnh online, đường dẫn <code>./assets/images/...</code> hoặc chọn file ảnh trực tiếp từ máy. Chiều cao banner luôn <strong>tự động co giãn 100% theo đúng tỉ lệ hình gốc</strong> của bạn (không bị cắt xén).</p>
+        </div>
+        <label style="display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.86rem; color: var(--primary); cursor: pointer;">
+          <input type="checkbox" id="ads-master-enable" checked style="width: 18px; height: 18px; accent-color: #38bdf8;" />
+          <span>Bật hiển thị Banner</span>
+        </label>
+      </div>
+
+      <form id="admin-ads-form">
+        <!-- Hàng cấu hình kích thước chung -->
+        <div class="broadcast-form-row" style="margin-bottom: 16px; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 0.84rem; color: var(--text-muted); font-weight: 700;">Chế độ kích thước:</label>
+            <select id="ads-size-mode" class="rank-select-admin" style="padding: 9px 14px; font-size: 0.86rem;">
+              <option value="custom">📐 Tự co chiều cao theo độ rộng bạn chọn (Khuyên dùng)</option>
+              <option value="original">🖼️ Giữ nguyên kích thước thật của ảnh gốc (Original Size)</option>
+            </select>
+          </div>
+
+          <div id="ads-width-group" style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 0.84rem; color: var(--text-muted); font-weight: 700;">Độ rộng (px):</label>
+            <input
+              type="number"
+              id="ads-banner-width"
+              class="broadcast-input"
+              style="max-width: 110px; padding: 8px 12px;"
+              min="90"
+              max="350"
+              value="145"
+            />
+            <span style="font-size: 0.78rem; color: var(--text-muted);">(Nhỏ: 125 • Vừa: 150 • Lớn: 200)</span>
+          </div>
+        </div>
+
+        <!-- 2 Cột cấu hình Banner Trái & Banner Phải -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; margin-bottom: 16px;">
+
+          <!-- Banner Bên Trái -->
+          <div style="background: rgba(6, 11, 22, 0.75); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <strong style="color: var(--primary); font-size: 0.92rem;"><i class="ri-layout-left-2-line"></i> Banner Bên Trái</strong>
+              <label style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="checkbox" id="ads-left-enable" checked style="accent-color: #38bdf8;" /> Hiện bên trái
+              </label>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <input
+                type="text"
+                id="ads-left-img"
+                class="broadcast-input"
+                placeholder="Link ảnh (https://... hoặc ./assets/images/banner1.jpg)"
+              />
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label class="btn-admin-sm ban" style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                  <i class="ri-upload-2-line"></i> Hoặc chọn ảnh từ máy
+                  <input type="file" id="ads-left-file" accept="image/*" style="display: none;" />
+                </label>
+                <span id="ads-left-file-status" style="font-size: 0.75rem; color: var(--text-muted);">Giữ nguyên tỉ lệ gốc</span>
+              </div>
+              <input
+                type="text"
+                id="ads-left-link"
+                class="broadcast-input"
+                placeholder="Link đích khi khách bấm vào (VD: https://facebook.com/...)"
+              />
+            </div>
+          </div>
+
+          <!-- Banner Bên Phải -->
+          <div style="background: rgba(6, 11, 22, 0.75); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <strong style="color: var(--accent-aqua); font-size: 0.92rem;"><i class="ri-layout-right-2-line"></i> Banner Bên Phải</strong>
+              <label style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="checkbox" id="ads-right-enable" checked style="accent-color: #38bdf8;" /> Hiện bên phải
+              </label>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <input
+                type="text"
+                id="ads-right-img"
+                class="broadcast-input"
+                placeholder="Link ảnh (https://... hoặc ./assets/images/banner2.jpg)"
+              />
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label class="btn-admin-sm ban" style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                  <i class="ri-upload-2-line"></i> Hoặc chọn ảnh từ máy
+                  <input type="file" id="ads-right-file" accept="image/*" style="display: none;" />
+                </label>
+                <span id="ads-right-file-status" style="font-size: 0.75rem; color: var(--text-muted);">Giữ nguyên tỉ lệ gốc</span>
+              </div>
+              <input
+                type="text"
+                id="ads-right-link"
+                class="broadcast-input"
+                placeholder="Link đích khi khách bấm vào (VD: https://discord.gg/...)"
+              />
+            </div>
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn-broadcast-send">
+          <i class="ri-save-3-fill"></i> Lưu & Cập Nhật Banner Lên Trang Chủ
+        </button>
+      </form>
+    </section>
+
     <!-- Thống kê nhanh -->
     <section class="stats-grid">
       <div class="stat-card">

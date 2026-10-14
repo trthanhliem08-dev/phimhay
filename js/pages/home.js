@@ -174,20 +174,33 @@ function bindEvents() {
     loadMovies();
   });
 
-  // 6. Tìm kiếm phim trực tiếp
+  // 6. Ô Tìm Kiếm Thông Minh (Live Search Dropdown xổ kết quả kèm ảnh Poster tức thì)
   const searchForm = document.getElementById("search-form");
   const searchInput = document.getElementById("search-input");
   let debounceTimer = null;
 
+  // Tạo khung dropdown gắn ngay dưới thanh search
+  let liveDropdown = document.getElementById("live-search-dropdown");
+  if (searchForm && !liveDropdown) {
+    liveDropdown = document.createElement("div");
+    liveDropdown.id = "live-search-dropdown";
+    liveDropdown.className = "live-search-dropdown";
+    searchForm.appendChild(liveDropdown);
+  }
+
+  // Bấm Enter -> Đóng dropdown và cuộn xuống lưới kết quả đầy đủ
   searchForm?.addEventListener("submit", (e) => {
     e.preventDefault();
+    liveDropdown?.classList.remove("active");
     triggerSearch(searchInput.value);
   });
 
+  // Gõ phím -> Xổ bảng gợi ý tức thì kèm ảnh Poster sau 300ms
   searchInput?.addEventListener("input", () => {
     clearTimeout(debounceTimer);
     const kw = searchInput.value.trim();
     if (!kw) {
+      liveDropdown?.classList.remove("active");
       if (state.mode === "search") {
         state.mode = "new";
         state.title = "Phim Mới Cập Nhật";
@@ -196,9 +209,34 @@ function bindEvents() {
       }
       return;
     }
+
+    if (liveDropdown) {
+      liveDropdown.classList.add("active");
+      liveDropdown.innerHTML = `
+        <div class="live-search-status">
+          <i class="ri-loader-4-line spin-icon" style="display:inline-block; font-size:1.2rem; vertical-align:middle; margin-right:6px;"></i>
+          Đang tìm kiếm <strong>"${escapeHtml(kw)}"</strong>...
+        </div>
+      `;
+    }
+
     debounceTimer = setTimeout(() => {
-      triggerSearch(kw);
-    }, 480);
+      performLiveDropdownSearch(kw, liveDropdown);
+    }, 300);
+  });
+
+  // Bấm lại vào ô input khi đang có chữ -> Hiện lại dropdown
+  searchInput?.addEventListener("focus", () => {
+    if (searchInput.value.trim() && liveDropdown && liveDropdown.innerHTML.trim() !== "") {
+      liveDropdown.classList.add("active");
+    }
+  });
+
+  // Click ra ngoài -> Tự động đóng dropdown
+  document.addEventListener("click", (e) => {
+    if (searchForm && !searchForm.contains(e.target)) {
+      liveDropdown?.classList.remove("active");
+    }
   });
 
   // 7. Điều hướng thanh trượt Top 10
@@ -244,6 +282,73 @@ function resetFilterControls() {
   if (g) g.value = "";
   if (c) c.value = "";
   if (s) s.value = "";
+}
+
+/**
+ * Gọi API tìm kiếm và đổ 6 bộ phim khớp nhất kèm ảnh Poster vào bảng xổ xuống tức thì
+ */
+async function performLiveDropdownSearch(keyword, dropdownEl) {
+  if (!dropdownEl) return;
+  try {
+    const result = await searchMovies(keyword, 1);
+    const items = result.items || [];
+    const total = result.paginate?.total_items || items.length;
+
+    if (items.length === 0) {
+      dropdownEl.innerHTML = `
+        <div class="live-search-status">
+          <i class="ri-film-line"></i> Không tìm thấy phim nào khớp với <strong>"${escapeHtml(keyword)}"</strong>
+        </div>
+      `;
+      return;
+    }
+
+    const topItems = items.slice(0, 6);
+    dropdownEl.innerHTML = `
+      <div class="live-search-header">
+        <span><i class="ri-flashlight-fill"></i> Gợi ý nhanh (${total} kết quả)</span>
+        <span>Bấm để xem ngay</span>
+      </div>
+      <div class="live-search-list">
+        ${topItems
+          .map(
+            (m) => `
+          <a href="watch.html?slug=${encodeURIComponent(m.slug)}" class="live-search-item">
+            <img
+              src="${escapeHtml(m.thumb_url)}"
+              alt="${escapeHtml(m.name)}"
+              class="live-search-thumb"
+              onerror="this.onerror=null;this.src='https://placehold.co/80x120/0f1b33/7dd3fc?text=Phim';"
+            />
+            <div class="live-search-info">
+              <div class="live-search-title">${escapeHtml(m.name)}</div>
+              <div class="live-search-origin">${escapeHtml(m.original_name)}</div>
+              <div class="live-search-badges">
+                <span class="ls-badge">${escapeHtml(m.current_episode)}</span>
+                <span class="ls-badge lang">${escapeHtml(m.quality)} • ${escapeHtml(m.language)}</span>
+              </div>
+            </div>
+          </a>
+        `
+          )
+          .join("")}
+      </div>
+      <button type="button" class="live-search-footer" id="btn-live-view-all">
+        <i class="ri-search-eye-line"></i>
+        <span>Xem toàn bộ kết quả cho "${escapeHtml(keyword)}" →</span>
+      </button>
+    `;
+
+    document.getElementById("btn-live-view-all")?.addEventListener("click", () => {
+      dropdownEl.classList.remove("active");
+      triggerSearch(keyword);
+    });
+  } catch (err) {
+    console.warn("Lỗi tìm kiếm nhanh:", err);
+    dropdownEl.innerHTML = `
+      <div class="live-search-status">Không thể kết nối tìm kiếm lúc này.</div>
+    `;
+  }
 }
 
 function triggerSearch(keyword) {

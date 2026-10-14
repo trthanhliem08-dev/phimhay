@@ -1,49 +1,42 @@
 // ============================================================================
 // FILE: js/utils/ads-banner.js
-// MỤC ĐÍCH: Quản lý 2 Banner Quảng Cáo Nổi (Trái & Phải) CHỈ HIỂN THỊ Ở INDEX.HTML.
-//           Hoàn toàn độc lập trong 1 file duy nhất để bạn dễ bật/tắt hoặc đổi ảnh.
+// MỤC ĐÍCH: Hiển thị 2 Banner Quảng Cáo Nổi (Trái & Phải) ở Trang chủ (index.html)
+//           - Tự động đồng bộ Real-time từ bảng điều khiển trong admin.html
+//           - Tự động co giãn theo đúng tỉ lệ hình gốc (không bị cắt mất chữ/hình)
+//           - Hỗ trợ chọn "Kích thước ảnh gốc" hoặc "Tùy chỉnh độ rộng" ngay tại Admin
 // ============================================================================
 
-export const ADS_CONFIG = {
-  // Bật (true) hoặc tắt (false) toàn bộ hệ thống banner nổi2 bên
+import { db, doc, onSnapshot } from "../config/firebase-config.js";
+
+// Cấu hình mặc định khi bạn chưa bấm Lưu lần nào trong trang Admin
+export const DEFAULT_ADS_CONFIG = {
   enabled: true,
-
-  // Chiều rộng của mỗi banner (px) - Nhỏ gọn, không che nội dung phim
-  bannerWidth: 236,
-
-  // Cấu hình Banner bên TRÁI
+  sizeMode: "custom", // "custom" (tự co chiều cao theo độ rộng) | "original" (giữ kích thước ảnh gốc)
+  bannerWidth: 145,   // Độ rộng (px) khi dùng chế độ "custom"
   leftBanner: {
-    enabled: false,
-    // CÁCH 1 (Dùng ảnh trong máy): Đặt ảnh vào thư mục assets/images/ rồi ghi: "./assets/images/banner1.jpg"
-    // CÁCH 2 (Dùng link ảnh trên mạng): Dán trực tiếp link https://... như bên dưới
-    imageUrl: "https://placehold.co/270x720/0b1426/7dd3fc?text=QUANG+CAO\nBEN+TRAI\n(136x360)",
-    targetUrl: "https://facebook.com", // Link mở ra khi người dùng bấm vào banner
+    enabled: true,
+    imageUrl: "https://placehold.co/290x640/0b1426/7dd3fc?text=QUANG+CAO\nBEN+TRAI",
+    targetUrl: "https://facebook.com",
     altText: "Quảng cáo bên trái"
   },
-
-  // Cấu hình Banner bên PHẢI
   rightBanner: {
-    enabled: false,
-    // Bạn có thể đổi thành "./assets/images/banner2.png" hoặc link ảnh online bất kỳ
-    imageUrl: "https://placehold.co/270x720/0b1426/a5f3fc?text=QUANG+CAO\nBEN+PHAI\n(136x360)",
-    targetUrl: "https://discord.com", // Link mở ra khi người dùng bấm vào banner
+    enabled: true,
+    imageUrl: "https://placehold.co/290x640/0b1426/a5f3fc?text=QUANG+CAO\nBEN+PHAI",
+    targetUrl: "https://discord.com",
     altText: "Quảng cáo bên phải"
   }
 };
 
+const closedSidesInSession = new Set();
+
 document.addEventListener("DOMContentLoaded", () => {
-  if (!ADS_CONFIG.enabled) return;
   injectFloatingAdsStyles();
-  renderFloatingAds();
+  initRealtimeAdsBanner();
 });
 
-/**
- * Tự động nhúng CSS cho 2 Banner nổi (Không cần sửa vào style.css)
- */
 function injectFloatingAdsStyles() {
   if (document.getElementById("floating-ads-style")) return;
 
-  const w = Number(ADS_CONFIG.bannerWidth) || 136;
   const styleEl = document.createElement("style");
   styleEl.id = "floating-ads-style";
   styleEl.textContent = `
@@ -51,15 +44,17 @@ function injectFloatingAdsStyles() {
       position: fixed;
       top: 54%;
       transform: translateY(-50%);
-      width: ${w}px;
       z-index: 88;
       border-radius: 14px;
-      background: rgba(11, 20, 38, 0.85);
+      background: rgba(11, 20, 38, 0.86);
       border: 1px solid rgba(125, 211, 252, 0.35);
       box-shadow: 0 14px 32px rgba(2, 6, 23, 0.75), 0 0 18px rgba(125, 211, 252, 0.2);
       backdrop-filter: blur(10px);
       padding: 5px;
-      transition: opacity 0.28s ease, transform 0.28s ease, box-shadow 0.25s ease;
+      transition: opacity 0.28s ease, transform 0.28s ease, box-shadow 0.25s ease, width 0.25s ease;
+      max-height: 84vh;
+      display: flex;
+      flex-direction: column;
     }
 
     .floating-ad-banner:hover {
@@ -89,20 +84,34 @@ function injectFloatingAdsStyles() {
       line-height: 0;
     }
 
+    /* Tự động co giãn theo đúng tỉ lệ hình gốc (height: auto, không cắt hình) */
     .floating-ad-link img {
+      display: block;
       width: 100%;
       height: auto;
-      max-height: 370px;
-      object-fit: cover;
+      max-height: 80vh;
+      object-fit: contain;
       border-radius: 10px;
       transition: transform 0.35s ease;
     }
 
-    .floating-ad-banner:hover .floating-ad-link img {
-      transform: scale(1.03);
+    /* Khi chọn chế độ giữ nguyên kích thước ảnh gốc (Original Size) */
+    .floating-ad-banner.mode-original {
+      width: auto !important;
+      max-width: 280px;
     }
 
-    /* Nút X tắt banner */
+    .floating-ad-banner.mode-original .floating-ad-link img {
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: 80vh;
+    }
+
+    .floating-ad-banner:hover .floating-ad-link img {
+      transform: scale(1.02);
+    }
+
     .btn-close-floating-ad {
       position: absolute;
       top: -10px;
@@ -146,15 +155,6 @@ function injectFloatingAdsStyles() {
       pointer-events: none;
     }
 
-    /* Tự động ẩn trên màn hình nhỏ / điện thoại để không che mất phim */
-    @media (max-width: 1480px) {
-      .floating-ad-banner {
-        width: 115px;
-      }
-      .floating-ad-banner.left-side { left: 8px; }
-      .floating-ad-banner.right-side { right: 8px; }
-    }
-
     @media (max-width: 1180px) {
       .floating-ad-banner {
         display: none !important;
@@ -165,34 +165,68 @@ function injectFloatingAdsStyles() {
 }
 
 /**
- * Tạo HTML cho 2 banner Trái và Phải kèm sự kiện bấm dấu X để tắt
+ * Lắng nghe cấu hình Banner Real-time từ Firestore (do Admin chỉnh trong admin.html)
  */
-function renderFloatingAds() {
+function initRealtimeAdsBanner() {
+  onSnapshot(
+    doc(db, "users", "GLOBAL_ADS_CONFIG"),
+    (docSnap) => {
+      if (docSnap.exists()) {
+        const liveConfig = docSnap.data();
+        renderFloatingAds(liveConfig);
+      } else {
+        renderFloatingAds(DEFAULT_ADS_CONFIG);
+      }
+    },
+    (err) => {
+      console.warn("Không thể tải cấu hình Ads từ Firebase, dùng cấu hình mặc định:", err);
+      renderFloatingAds(DEFAULT_ADS_CONFIG);
+    }
+  );
+}
+
+function renderFloatingAds(config) {
+  // Xóa banner cũ trước khi vẽ lại cấu hình mới
+  document.querySelectorAll(".floating-ad-banner").forEach((el) => el.remove());
+
+  if (!config || config.enabled === false) return;
+
+  const sizeMode = config.sizeMode || "custom";
+  const customWidth = Math.min(360, Math.max(90, Number(config.bannerWidth) || 145));
+
   const sides = [
-    { key: "left", className: "left-side", config: ADS_CONFIG.leftBanner },
-    { key: "right", className: "right-side", config: ADS_CONFIG.rightBanner }
+    { key: "left", className: "left-side", item: config.leftBanner },
+    { key: "right", className: "right-side", item: config.rightBanner }
   ];
 
-  sides.forEach(({ key, className, config }) => {
-    if (!config || !config.enabled || !config.imageUrl) return;
+  sides.forEach(({ key, className, item }) => {
+    if (!item || !item.enabled || !item.imageUrl) return;
+    if (closedSidesInSession.has(key)) return;
 
     const bannerEl = document.createElement("aside");
-    bannerEl.className = `floating-ad-banner ${className}`;
+    bannerEl.className = `floating-ad-banner ${className} ${
+      sizeMode === "original" ? "mode-original" : "mode-custom"
+    }`;
     bannerEl.id = `floating-ad-${key}`;
+
+    if (sizeMode !== "original") {
+      bannerEl.style.width = `${customWidth}px`;
+    }
 
     bannerEl.innerHTML = `
       <button type="button" class="btn-close-floating-ad" title="Tắt quảng cáo">&times;</button>
-      <a href="${config.targetUrl || "#"}" target="_blank" rel="noopener noreferrer" class="floating-ad-link">
+      <a href="${item.targetUrl || "#"}" target="_blank" rel="noopener noreferrer" class="floating-ad-link">
         <img
-          src="${config.imageUrl}"
-          alt="${config.altText || "Banner quảng cáo"}"
-          onerror="this.onerror=null;this.src='https://placehold.co/270x720/0b1426/7dd3fc?text=BANNER+AD';"
+          src="${item.imageUrl}"
+          alt="${item.altText || "Banner quảng cáo"}"
+          onerror="this.onerror=null;this.src='https://placehold.co/270x600/0b1426/7dd3fc?text=BANNER+AD';"
         />
       </a>
       <span class="floating-ad-tag">QC</span>
     `;
 
     bannerEl.querySelector(".btn-close-floating-ad")?.addEventListener("click", () => {
+      closedSidesInSession.add(key);
       bannerEl.classList.add("closed");
       setTimeout(() => bannerEl.remove(), 300);
     });
