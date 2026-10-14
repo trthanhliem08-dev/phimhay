@@ -23,21 +23,27 @@ import {
 } from "../config/firebase-config.js";
 import { showToast, DEFAULT_AVATARS, escapeHtml } from "../utils/helpers.js";
 
-let currentUserProfile = null;
+let currentUserProfile = undefined;
+let isAuthReady = false;
 const authListeners = [];
 
 /**
- * Đăng ký hàm lắng nghe khi trạng thái đăng nhập thay đổi
+ * Đăng ký hàm lắng nghe khi trạng thái đăng nhập thay đổi.
+ * Chỉ gọi callback ngay lập tức nếu Firebase đã kiểm tra xong phiên đăng nhập (isAuthReady = true).
  */
 export function subscribeAuth(callback) {
   authListeners.push(callback);
-  if (currentUserProfile !== undefined) {
+  if (isAuthReady) {
     callback(currentUserProfile);
   }
 }
 
 function notifyAuthListeners(profile) {
   currentUserProfile = profile;
+  isAuthReady = true;
+  if (profile) {
+    closeAuthModal();
+  }
   authListeners.forEach((cb) => cb(profile));
 }
 

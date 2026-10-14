@@ -46,6 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
       openAuthModal();
       return;
     }
+    // Đảm bảo đóng hộp thoại đăng nhập nếu đã nhận diện được tài khoản
+    document.getElementById("auth-modal")?.classList.remove("active");
     populateProfileUI(profile);
   });
 });
@@ -63,7 +65,7 @@ function populateProfileUI(profile) {
   const isAdmin = profile.role === "admin" || isAdminEmail(profile.email);
   if (badge) {
     badge.className = `role-pill ${isAdmin ? "admin" : "user"}`;
-    badge.textContent = isAdmin ? "🛡️ Quản trị viên (Admin)" : "Thành viên";
+    badge.innerHTML = isAdmin ? '<i class="ri-shield-star-fill"></i> Quản trị viên (Admin)' : '<i class="ri-user-smile-line"></i> Thành viên';
   }
 }
 
@@ -194,7 +196,7 @@ function bindProfileEvents() {
       showToast("Không thể lưu hồ sơ lúc này.", "error");
     } finally {
       saveBtn.disabled = false;
-      saveBtn.textContent = "💾 Lưu Thay Đổi Hồ Sơ";
+      saveBtn.innerHTML = '<i class="ri-save-3-line"></i> Lưu Thay Đổi Hồ Sơ';
     }
   });
 
