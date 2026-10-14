@@ -114,10 +114,11 @@ function startAdminRealtimeListeners() {
     renderAdminComments();
   });
 
-  // 2. Lắng nghe toàn bộ bảng `users`
+  // 2. Lắng nghe toàn bộ bảng `users` (bỏ qua bản ghi hệ thống GLOBAL_BROADCAST_CONFIG)
   onSnapshot(collection(db, "users"), (snapshot) => {
     const list = [];
     snapshot.forEach((docSnap) => {
+      if (docSnap.id === "GLOBAL_BROADCAST_CONFIG" || docSnap.data()?.isBroadcastDoc) return;
       list.push({ id: docSnap.id, ...docSnap.data() });
     });
     allUsers = list;
@@ -128,7 +129,7 @@ function startAdminRealtimeListeners() {
   });
 
   // 3. Lắng nghe trạng thái thông báo toàn server
-  onSnapshot(doc(db, "settings", "broadcast"), (docSnap) => {
+  onSnapshot(doc(db, "users", "GLOBAL_BROADCAST_CONFIG"), (docSnap) => {
     const badge = document.getElementById("admin-broadcast-status");
     if (!badge) return;
     const data = docSnap.exists() ? docSnap.data() : null;

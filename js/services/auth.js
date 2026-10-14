@@ -291,14 +291,14 @@ function renderAuthModal() {
 // ============================================================================
 let broadcastHideTimer = null;
 let broadcastCountdownInterval = null;
-let lastBroadcastId = null;
 let broadcastListenerStarted = false;
+let currentActiveBroadcastId = null;
 
 function initGlobalBroadcastListener() {
   if (broadcastListenerStarted) return;
   broadcastListenerStarted = true;
 
-  const broadcastRef = doc(db, "settings", "broadcast");
+  const broadcastRef = doc(db, "users", "GLOBAL_BROADCAST_CONFIG");
   onSnapshot(
     broadcastRef,
     (docSnap) => {
@@ -309,53 +309,74 @@ function initGlobalBroadcastListener() {
 
       const data = docSnap.data();
       if (!data || !data.active || !data.message) {
+        currentActiveBroadcastId = null;
         hideBroadcastBar();
         return;
       }
 
+      const broadcastId = data.broadcastId || String(data.createdAtMs || "default");
       const now = Date.now();
-      const expiresAtMs = Number(data.expiresAtMs || 0);
-      const broadcastId = data.broadcastId || String(expiresAtMs);
 
-      // Nếu thông báo đã hết hạn 1 phút
-      if (expiresAtMs <= now) {
+      // Bỏ qua nếu đây là thông báo cũ từ hơn 10 phút trước mà Admin quên tắt
+      if (data.createdAtMs && Math.abs(now - Number(data.createdAtMs)) > 10 * 60 * 1000) {
         hideBroadcastBar();
         return;
       }
 
-      // Tính thời gian còn lại (tối đa 60 giây)
-      const remainingMs = Math.min(60000, Math.max(1000, expiresAtMs - now));
-      showBroadcastBar(data.message, remainingMs, broadcastId);
+      // Lưu thời điểm máy Viewer này bắt đầu nhìn thấy mã broadcastId vào sessionStorage
+      // để nếu Viewer bấm chuyển từ trang chủ sang trang xem phim thì vẫn chạy tiếp mượt mà
+      const storageKey = `bph_seen_${broadcastId}`;
+      let firstSeenAt = Number(sessionStorage.getItem(storageKey) || 0);
+      if (!firstSeenAt) {
+        firstSeenAt = now;
+        sessionStorage.setItem(storageKey, String(firstSeenAt));
+      }
+
+      const elapsedMs = now - firstSeenAt;
+      const remainingMs = 60000 - elapsedMs;
+
+      if (remainingMs <= 500) {
+        hideBroadcastBar();
+        return;
+      }
+
+      // Nếu đang phát chính thông báo này rồi thì chỉ cập nhật nội dung, không reset lại đồng hồ
+      if (currentActiveBroadcastId === broadcastId && document.getElementById("global-broadcast-bar")?.classList.contains("active")) {
+        return;
+      }
+
+      currentActiveBroadcastId = broadcastId;
+      showBroadcastBar(data.message, Math.min(60000, remainingMs));
     },
     (err) => {
-      console.warn("Không thể lắng nghe thông báo toàn server:", err);
+      console.error("Lỗi lắng nghe thông báo toàn server:", err);
     }
   );
 }
 
-function showBroadcastBar(message, durationMs, broadcastId) {
+function showBroadcastBar(message, durationMs) {
   let bar = document.getElementById("global-broadcast-bar");
   if (!bar) {
     bar = document.createElement("div");
     bar.id = "global-broadcast-bar";
     bar.className = "global-broadcast-bar";
 
+    // Gắn trực tiếp vào bên dưới cùng của thẻ .site-header để luôn đi theo Header
+    // và KHÔNG BAO GIỜ bị Header che khuất khi Header có 2 dòng!
     const headerEl = document.querySelector(".site-header");
-    if (headerEl && headerEl.parentNode) {
-      headerEl.insertAdjacentElement("afterend", bar);
+    if (headerEl) {
+      headerEl.appendChild(bar);
     } else {
       document.body.prepend(bar);
     }
   }
 
-  // Nhân bản thông báo 10 lần trên dải băng chuyền để dù câu ngắn hay dài
-  // cũng chạy nối đuôi nhau liên tục mượt mà suốt đủ 1 phút!
   const cleanMsg = escapeHtml(message);
-  const repeatedUnits = Array.from({ length: 10 })
+  const repeatedUnits = Array.from({ length: 12 })
     .map(
       () => `
       <span class="broadcast-item">
-        <span class="broadcast-tag"><i class="ri-megaphone-fill"></i> THÔNG BÁO ADMIN</span>
+        <span class="broadcast-tag"><i class="ri-megaphone-fill"></i> THÔNG BÁO ADMIN:</span>
         <span class="broadcast-text">${cleanMsg}</span>
         <span class="broadcast-sep">✦</span>
       </span>
@@ -367,7 +388,7 @@ function showBroadcastBar(message, durationMs, broadcastId) {
     <div class="broadcast-inner">
       <div class="broadcast-pinned-label">
         <span class="broadcast-live-dot"></span>
-        <i class="ri-Volume-up-fill"></i>
+        <i class="ri-volume-up-fill"></i>
         <span>TOÀN SERVER</span>
       </div>
       <div class="broadcast-marquee-viewport">
@@ -383,7 +404,6 @@ function showBroadcastBar(message, durationMs, broadcastId) {
   `;
 
   bar.classList.add("active");
-  lastBroadcastId = broadcastId;
 
   clearTimeout(broadcastHideTimer);
   clearInterval(broadcastCountdownInterval);

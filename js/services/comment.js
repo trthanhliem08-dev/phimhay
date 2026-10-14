@@ -179,6 +179,8 @@ export async function updateUserRankByAdmin(targetUid, newRankKey) {
 /**
  * Admin phát thông báo chạy chữ toàn Server trong đúng 1 phút (60,000ms)
  */
+let adminAutoStopTimer = null;
+
 export async function publishGlobalBroadcast(messageText) {
   const clean = (messageText || "").trim();
   if (!clean) {
@@ -186,29 +188,57 @@ export async function publishGlobalBroadcast(messageText) {
     return;
   }
 
-  const now = Date.now();
-  const expiresAtMs = now + 60 * 1000; // Đúng 1 phút (60 giây)
+  try {
+    const now = Date.now();
+    const broadcastId = `bc_${now}`;
 
-  await setDoc(doc(db, "settings", "broadcast"), {
-    message: clean,
-    active: true,
-    createdAtMs: now,
-    expiresAtMs: expiresAtMs,
-    broadcastId: `bc_${now}`,
-    updatedAt: serverTimestamp()
-  });
+    // Lưu vào bảng `users` (cùng bảng với tính năng Phân cấp danh hiệu đã chạy ngon lành)
+    await setDoc(doc(db, "users", "GLOBAL_BROADCAST_CONFIG"), {
+      isBroadcastDoc: true,
+      message: clean,
+      active: true,
+      createdAtMs: now,
+      expiresAtMs: now + 60 * 1000,
+      broadcastId: broadcastId,
+      updatedAt: serverTimestamp()
+    });
 
-  showToast("Đã phát thông báo chạy chữ lên toàn Server trong 1 phút!", "success");
+    showToast("Đã phát thông báo chạy chữ lên toàn Server trong 60 giây!", "success");
+
+    // Tự động chuyển active = false trên Firestore sau 60 giây
+    clearTimeout(adminAutoStopTimer);
+    adminAutoStopTimer = setTimeout(async () => {
+      try {
+        await setDoc(
+          doc(db, "users", "GLOBAL_BROADCAST_CONFIG"),
+          { isBroadcastDoc: true, active: false },
+          { merge: true }
+        );
+      } catch (e) {
+        console.warn("Không thể tự đóng cờ broadcast:", e);
+      }
+    }, 60500);
+  } catch (error) {
+    console.error("Lỗi khi phát thông báo toàn server:", error);
+    showToast("Lỗi quyền Firestore khi phát thông báo: " + (error.code || error.message), "error");
+    throw error;
+  }
 }
 
 /**
  * Admin tắt sớm thông báo toàn Server
  */
 export async function stopGlobalBroadcast() {
-  await setDoc(
-    doc(db, "settings", "broadcast"),
-    { active: false, expiresAtMs: 0 },
-    { merge: true }
-  );
-  showToast("Đã dừng phát thông báo toàn Server.", "info");
+  clearTimeout(adminAutoStopTimer);
+  try {
+    await setDoc(
+      doc(db, "users", "GLOBAL_BROADCAST_CONFIG"),
+      { isBroadcastDoc: true, active: false, expiresAtMs: 0 },
+      { merge: true }
+    );
+    showToast("Đã dừng phát thông báo toàn Server.", "info");
+  } catch (error) {
+    console.error("Lỗi tắt thông báo:", error);
+    showToast("Không thể tắt thông báo: " + (error.code || error.message), "error");
+  }
 }
