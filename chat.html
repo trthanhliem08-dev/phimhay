@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Phòng Tán Gẫu Cộng Đồng — Biển Phim Hay</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/chat.css" />
+</head>
+<body>
+
+  <!-- HIỆU ỨNG ÁNH SÁNG NỀN AURORA -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="aurora-orb orb-1"></div>
+    <div class="aurora-orb orb-2"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo" title="Về trang chủ Biển Phim Hay">
+        <span class="brand-icon">
+          <span class="icon-pulse"></span>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"></polygon>
+          </svg>
+        </span>
+        <div class="brand-wordmark">
+          <span class="brand-text">BIỂN <span class="highlight">PHIM HAY</span></span>
+          <span class="brand-sub">OCEAN CINEMA HD</span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <div id="header-user-area">
+          <button class="btn-login-header" id="btn-open-auth">
+            <i class="ri-user-3-line"></i>
+            <span>Đăng nhập</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== NỘI DUNG PHÒNG TÁN GẪU ==================== -->
+  <main class="container chat-page-container">
+
+    <!-- Thanh điều hướng phụ dưới Header (Góc trên bên trái) -->
+    <div class="chat-top-subnav">
+      <a href="index.html" class="btn-back-home">
+        <span class="back-icon-circle">
+          <i class="ri-arrow-left-line"></i>
+        </span>
+        <span>Quay lại Trang Chủ</span>
+      </a>
+
+      <div class="chat-room-status-pill">
+        <span class="live-dot"></span>
+        <span>Kênh giao lưu trực tuyến 24/7</span>
+      </div>
+    </div>
+
+    <!-- Bố cục Phòng Chat (Khung Chat chính + Cột thông tin thành viên) -->
+    <div class="chat-layout">
+
+      <!-- CỘT TRÁI / CHÍNH: KHUNG TRÒ CHUYỆN REAL-TIME -->
+      <section class="chat-main-card">
+        <!-- Đầu phòng chat -->
+        <div class="chat-card-header">
+          <div class="chat-room-title">
+            <div class="room-icon-box">
+              <i class="ri-chat-smile-3-fill"></i>
+            </div>
+            <div>
+              <h1>Sảnh Tán Gẫu Biển Phim Hay</h1>
+              <p>Giao lưu, hỏi tên phim hay và trò chuyện thời gian thực cùng mọi người</p>
+            </div>
+          </div>
+
+          <div class="chat-header-right">
+            <span class="msg-counter-badge">
+              <i class="ri-message-3-line"></i>
+              <span id="chat-total-count">0</span> tin nhắn
+            </span>
+            <!-- Nút dọn phòng chat chỉ hiện riêng cho Admin -->
+            <button type="button" id="btn-clear-all-chat" class="btn-clear-chat-admin" style="display: none;" title="Xóa toàn bộ tin nhắn trong phòng">
+              <i class="ri-delete-bin-2-line"></i> Dọn phòng
+            </button>
+          </div>
+        </div>
+
+        <!-- Danh sách tin nhắn Real-time -->
+        <div id="chat-messages-box" class="chat-messages-box">
+          <div class="chat-loading-state">
+            <i class="ri-loader-4-line spin-icon"></i>
+            <span>Đang kết nối vào Sảnh Tán Gẫu...</span>
+          </div>
+        </div>
+
+        <!-- Khu vực nhập tin nhắn (Tự động đổi theo trạng thái Đăng nhập) -->
+        <div id="chat-input-area" class="chat-input-area"></div>
+      </section>
+
+      <!-- CỘT PHẢI: THẺ CÁ NHÂN & THÀNH VIÊN ĐANG HOẠT ĐỘNG -->
+      <aside class="chat-sidebar">
+        <!-- Thẻ hồ sơ của bạn -->
+        <div class="sidebar-card" id="my-chat-card">
+          <h3 class="sidebar-title"><i class="ri-user-star-line"></i> Danh Hiệu Của Bạn</h3>
+          <div id="my-chat-profile-box" class="my-chat-profile-box">
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Đăng nhập để hiển thị Avatar và Danh hiệu của bạn trong phòng chat.</p>
+          </div>
+        </div>
+
+        <!-- Danh sách thành viên vừa nhắn tin -->
+        <div class="sidebar-card">
+          <h3 class="sidebar-title"><i class="ri-group-line"></i> Thành Viên Gần Đây</h3>
+          <div id="active-chatters-list" class="active-chatters-list">
+            <p style="color: var(--text-muted); font-size: 0.84rem;">Đang cập nhật...</p>
+          </div>
+        </div>
+
+        <!-- Cấp bậc danh hiệu trong phòng chat -->
+        <div class="sidebar-card">
+          <h3 class="sidebar-title"><i class="ri-medal-fill"></i> Bảng Cấp Bậc</h3>
+          <ul class="rank-legend-list">
+            <li>
+              <span class="role-badge-admin"><i class="ri-vip-crown-fill"></i> ADMIN</span>
+              <span>Quản trị viên tối cao</span>
+            </li>
+            <li>
+              <span class="rank-badge rank-3"><i class="ri-fire-fill"></i> Thánh Cày Phim</span>
+              <span>Thành viên kỳ cựu Cấp 3</span>
+            </li>
+            <li>
+              <span class="rank-badge rank-2"><i class="ri-film-fill"></i> Mọt Phim</span>
+              <span>Thành viên tích cực Cấp 2</span>
+            </li>
+            <li>
+              <span class="rank-badge rank-1"><i class="ri-seedling-line"></i> Người Mới</span>
+              <span>Thành viên mới gia nhập</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+    </div>
+
+  </main>
+
+  <script type="module" src="./js/pages/chat.js"></script>
+</body>
+</html>
