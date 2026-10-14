@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebPhimTest - Xem Phim HD Vietsub Miễn Phí</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- CSS chính của hệ thống -->
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+  <!-- ==================== HEADER / THANH ĐIỀU HƯỚNG ==================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">▶</span>
+        <span>WEB<span class="highlight">PHIM</span></span>
+      </a>
+
+      <nav class="main-nav">
+        <a href="#" class="nav-link active" data-nav-category="phim-moi-cap-nhat" data-title="Phim Mới Cập Nhật">Trang Chủ</a>
+        <a href="#" class="nav-link" data-nav-category="phim-bo" data-title="Danh Sách Phim Bộ">Phim Bộ</a>
+        <a href="#" class="nav-link" data-nav-category="phim-le" data-title="Danh Sách Phim Lẻ">Phim Lẻ</a>
+        <a href="#" class="nav-link" data-nav-category="hoat-hinh" data-title="Phim Hoạt Hình / Anime">Hoạt Hình</a>
+        <a href="#" class="nav-link" data-nav-category="tv-shows" data-title="Chương Trình Truyền Hình">TV Shows</a>
+      </nav>
+
+      <div class="header-actions">
+        <form id="search-form" class="search-box">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Tìm tên phim, diễn viên..."
+            autocomplete="off"
+          />
+          <button type="submit" title="Tìm kiếm">🔍</button>
+        </form>
+
+        <!-- Khu vực tài khoản Firebase (Tự động nạp bởi js/services/auth.js) -->
+        <div id="header-user-area">
+          <button class="btn-login-header" id="btn-open-auth">Đăng nhập</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== NỘI DUNG CHÍNH ==================== -->
+  <main class="container">
+
+    <!-- 1. HERO BANNER (Tự động lấy 5 phim mới nhất từ NguonC) -->
+    <section id="hero-banner" class="hero-banner">
+      <div id="hero-backdrop" class="hero-backdrop"></div>
+      <div class="hero-gradient"></div>
+
+      <div class="hero-content">
+        <div id="hero-meta" class="hero-meta">
+          <span class="hero-tag hot">🔥 Đang tải phim nổi bật...</span>
+        </div>
+        <h1 id="hero-title" class="hero-title">Khám Phá Kho Phim Điện Ảnh</h1>
+        <p id="hero-origin" class="hero-origin">Nguồn dữ liệu trực tiếp từ API NguonC</p>
+        <p id="hero-desc" class="hero-desc">
+          Hệ thống tự động cập nhật phim bộ, phim lẻ, hoạt hình chất lượng FHD Vietsub và Thuyết minh kèm bình luận thời gian thực.
+        </p>
+        <div class="hero-buttons">
+          <a id="hero-btn-play" href="#catalog-section" class="btn-hero-play">
+            <span>▶ Xem Phim Ngay</span>
+          </a>
+        </div>
+      </div>
+
+      <div id="hero-dots" class="hero-dots"></div>
+    </section>
+
+    <!-- 2. THANH BỘ LỌC THỂ LOẠI & QUỐC GIA -->
+    <section class="filter-bar">
+      <div class="filter-controls">
+        <select id="filter-genre" class="filter-select">
+          <option value="">-- Lọc theo Thể Loại --</option>
+        </select>
+
+        <select id="filter-country" class="filter-select">
+          <option value="">-- Lọc theo Quốc Gia --</option>
+        </select>
+
+        <button type="button" id="btn-reset-filter" class="btn-reset">
+          ↻ Đặt lại mặc định
+        </button>
+      </div>
+      <span id="total-items-badge" class="total-badge">Đang đồng bộ API...</span>
+    </section>
+
+    <!-- 3. TỦ PHIM ĐANG XEM DỞ (Tự động hiện nếu LocalStorage có lịch sử) -->
+    <section id="history-section" class="history-section" style="display: none;">
+      <div class="section-header">
+        <h2>Xem Tiếp Gần Đây</h2>
+      </div>
+      <div id="history-grid" class="history-grid"></div>
+    </section>
+
+    <!-- 4. DANH SÁCH PHIM CHÍNH -->
+    <section id="catalog-section" class="catalog-section">
+      <div class="section-header">
+        <h2 id="section-title">Phim Mới Cập Nhật</h2>
+      </div>
+
+      <div id="movie-grid" class="movie-grid"></div>
+
+      <!-- Thanh phân trang -->
+      <div class="pagination-bar">
+        <button type="button" id="btn-prev-page" class="btn-page" disabled>
+          ← Trang trước
+        </button>
+        <span id="page-indicator" class="page-indicator">Trang 1 / 1</span>
+        <button type="button" id="btn-next-page" class="btn-page">
+          Trang sau →
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 <strong>WebPhimTest</strong> — Chạy trên nền tảng API NguonC & Firebase Realtime.</p>
+    </div>
+  </footer>
+
+  <!-- Script điều khiển Trang chủ (ES Module) -->
+  <script type="module" src="./js/pages/home.js"></script>
+</body>
+</html>

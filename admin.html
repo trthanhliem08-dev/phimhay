@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Trị Hệ Thống - WebPhimTest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/admin.css" />
+</head>
+<body>
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">▶</span>
+        <span>WEB<span class="highlight">PHIM</span></span>
+      </a>
+
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">← Về Trang Chủ</a>
+      </nav>
+
+      <div class="header-actions">
+        <div id="header-user-area"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== NỘI DUNG QUẢN TRỊ VIÊN ==================== -->
+  <main class="container admin-container" id="admin-root" style="display: none;">
+
+    <section class="admin-banner">
+      <div>
+        <h1>🛡️ Trung Tâm Quản Trị WebPhim</h1>
+        <p>Xin chào Quản trị viên <strong id="admin-email-label">liemtran.238460@gmail.com</strong> — Mọi thay đổi được đồng bộ Real-time.</p>
+      </div>
+    </section>
+
+    <!-- Thống kê nhanh -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Tổng số Bình luận</span>
+        <div class="stat-value" id="stat-total-comments">0</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Tổng số Thành viên</span>
+        <div class="stat-value" id="stat-total-users">0</div>
+      </div>
+      <div class="stat-card danger">
+        <span class="stat-label">Tài khoản đang bị chặn</span>
+        <div class="stat-value" id="stat-banned-users">0</div>
+      </div>
+    </section>
+
+    <!-- 2 Bảng điều khiển Real-time -->
+    <div class="admin-panels-grid">
+
+      <!-- Cột trái: Giám sát & Xóa bình luận Real-time -->
+      <section class="admin-panel">
+        <div class="panel-header">
+          <h2>💬 Toàn Bộ Bình Luận Mới Nhất</h2>
+          <input
+            type="text"
+            id="search-comments-admin"
+            class="admin-search-input"
+            placeholder="Lọc nội dung, tên user..."
+          />
+        </div>
+        <div id="admin-comments-list" class="admin-list">
+          <p style="color: var(--text-muted);">Đang tải dữ liệu bình luận...</p>
+        </div>
+      </section>
+
+      <!-- Cột phải: Quản lý & Chặn người dùng -->
+      <section class="admin-panel">
+        <div class="panel-header">
+          <h2>👥 Quản Lý Tài Khoản Người Dùng</h2>
+          <input
+            type="text"
+            id="search-users-admin"
+            class="admin-search-input"
+            placeholder="Tìm theo tên hoặc email..."
+          />
+        </div>
+        <div id="admin-users-list" class="admin-list">
+          <p style="color: var(--text-muted);">Đang tải danh sách người dùng...</p>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Thông báo chặn nếu người truy cập không phải Admin -->
+  <div class="container" id="admin-denied-box" style="margin-top: 60px; text-align: center;">
+    <h2>🔒 Đang kiểm tra quyền Quản trị viên...</h2>
+    <p style="color: var(--text-muted); margin-top: 8px;">
+      Trang này chỉ dành riêng cho tài khoản Quản trị viên (<strong>liemtran.238460@gmail.com</strong>).
+    </p>
+  </div>
+
+  <script type="module" src="./js/pages/admin.js"></script>
+</body>
+</html>

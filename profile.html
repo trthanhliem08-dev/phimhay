@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hồ Sơ Cá Nhân & Đổi Avatar - WebPhimTest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    .profile-layout {
+      margin: 32px auto 60px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .profile-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+    }
+    .profile-center {
+      text-align: center;
+    }
+    .avatar-preview-lg {
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary);
+      margin-bottom: 12px;
+      background: #1e293b;
+    }
+    .role-pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+    .role-pill.admin {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+    .role-pill.user {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+    .avatar-preset-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin: 12px 0 18px;
+    }
+    .preset-avatar-item {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      object-fit: cover;
+      background: var(--bg-main);
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .preset-avatar-item:hover,
+    .preset-avatar-item.selected {
+      transform: scale(1.08);
+      border-color: var(--primary);
+    }
+    .profile-form-group {
+      margin-bottom: 16px;
+    }
+    .profile-form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .profile-input {
+      width: 100%;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+    }
+    .upload-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-upload-file {
+      background: var(--bg-card);
+      border: 1px dashed var(--border-color);
+      color: var(--text-main);
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-save-profile {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+    .btn-clear-history {
+      background: rgba(239, 68, 68, 0.16);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    @media (max-width: 860px) {
+      .profile-layout {
+        grid-template-columns: 1fr;
+      }
+      .avatar-preset-grid {
+        grid-template-columns: repeat(3, 64px);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">▶</span>
+        <span>WEB<span class="highlight">PHIM</span></span>
+      </a>
+
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">← Về Trang Chủ</a>
+      </nav>
+
+      <div class="header-actions">
+        <div id="header-user-area"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== NỘI DUNG HỒ SƠ ==================== -->
+  <main class="container">
+    <div id="profile-main-content" class="profile-layout">
+      <!-- Cột trái: Thẻ thông tin tóm tắt -->
+      <aside class="profile-card profile-center">
+        <img
+          id="profile-current-avatar"
+          src="https://placehold.co/120x120"
+          alt="Avatar"
+          class="avatar-preview-lg"
+        />
+        <h2 id="profile-display-name">Đang tải...</h2>
+        <p id="profile-email" style="color: var(--text-muted); font-size: 0.86rem; margin-top: 4px;"></p>
+        <span id="profile-role-badge" class="role-pill user">Thành viên</span>
+      </aside>
+
+      <!-- Cột phải: Chỉnh sửa Tên & Đổi Avatar + Lịch sử xem -->
+      <section class="profile-card">
+        <h2 style="margin-bottom: 18px; font-size: 1.25rem;">Chỉnh Sửa Hồ Sơ & Đổi Avatar</h2>
+
+        <form id="profile-edit-form">
+          <div class="profile-form-group">
+            <label>Tên hiển thị (Sẽ xuất hiện khi bạn bình luận)</label>
+            <input type="text" id="input-profile-name" class="profile-input" required maxlength="40" />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Cách 1: Chọn nhanh Avatar có sẵn</label>
+            <div id="preset-avatar-list" class="avatar-preset-grid"></div>
+          </div>
+
+          <div class="profile-form-group">
+            <label>Cách 2: Tải ảnh từ máy tính của bạn (Tự động nén chuẩn HD)</label>
+            <div class="upload-row">
+              <label class="btn-upload-file">
+                📁 Chọn file ảnh từ máy...
+                <input type="file" id="input-avatar-file" accept="image/*" style="display: none;" />
+              </label>
+              <span id="upload-status-text" style="font-size: 0.82rem; color: var(--text-muted);">
+                Hỗ trợ JPG, PNG, WEBP
+              </span>
+            </div>
+          </div>
+
+          <div class="profile-form-group">
+            <label>Cách 3: Hoặc dán trực tiếp đường dẫn (URL) ảnh đại diện</label>
+            <input
+              type="text"
+              id="input-profile-avatar-url"
+              class="profile-input"
+              placeholder="https://..."
+            />
+          </div>
+
+          <button type="submit" id="btn-save-profile" class="btn-save-profile">
+            💾 Lưu Thay Đổi Hồ Sơ
+          </button>
+        </form>
+
+        <!-- Lịch sử xem phim -->
+        <div style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+          <div class="section-header">
+            <h2 style="font-size: 1.15rem;">Lịch Sử Phim Đã Xem Trên Thiết Bị Này</h2>
+            <button type="button" id="btn-clear-history" class="btn-clear-history">🗑 Xóa lịch sử</button>
+          </div>
+          <div id="profile-history-grid" class="history-grid"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="./js/pages/profile.js"></script>
+</body>
+</html>
